@@ -21,13 +21,15 @@ public class windarea : MonoBehaviour
     public bool onlyAffectPlayer = true;
     [Tooltip("要求玩家处于漂浮状态(isFloating)才生效：没拿「幕」道具时站在风区里不会被吹起")]
     public bool requireFloating = true;
-    [Tooltip("isFloating=false 时是否连粒子一起停掉，让风扇看起来像没在工作")]
-    public bool stopParticlesWhenInactive = true;
+    [Tooltip("（已废弃，保留仅为兼容旧预制体）粒子始终发射，不再随玩家状态开关")]
+    public bool stopParticlesWhenInactive = false;
 
     [Header("粒子特效（可留空：运行时会自动在自身和子物体里查找）")]
     public ParticleSystem windParticles;
     [Tooltip("勾选后粒子发射框会自动匹配本物体 Collider2D 的尺寸")]
     public bool syncParticlesWithTrigger = true;
+    [Tooltip("粒子是否始终发射。true = 无论有没有玩家、有没有满足漂浮条件，风柱都一直可见")]
+    public bool particlesAlwaysOn = true;
 
     // 需要施加风力的刚体（用列表兼容同时有多个物体进入）
     private readonly List<Rigidbody2D> _targets = new List<Rigidbody2D>();
@@ -40,7 +42,6 @@ public class windarea : MonoBehaviour
     private readonly List<Collider2D> _bodyColliders = new List<Collider2D>();
 
     private Collider2D _zone;
-    private bool _particlesActive;
 
     private void Awake()
     {
@@ -55,12 +56,14 @@ public class windarea : MonoBehaviour
             windParticles = GetComponentInChildren<ParticleSystem>();
 
         ApplyParticleShape();
+
+        // 粒子始终播放：它是风扇的"常驻外观"，不随玩家是否漂浮、是否在风区内开关
+        if (particlesAlwaysOn && windParticles != null)
+            windParticles.Play();
     }
 
     private void FixedUpdate()
     {
-        bool blow = false;
-
         // 倒序遍历，便于安全移除已离开或已销毁的对象
         for (int i = _targets.Count - 1; i >= 0; i--)
         {
@@ -82,14 +85,10 @@ public class windarea : MonoBehaviour
 
             // 只有漂浮状态(isFloating)才吃风：没拿「幕」时站在风区里完全没效果
             if (CanBlow(body))
-            {
                 ApplyWind(body);
-                blow = true;
-            }
         }
 
         PruneDestroyedKeys();
-        SetParticlesActive(!stopParticlesWhenInactive || blow);
     }
 
     /// <summary>
@@ -116,20 +115,6 @@ public class windarea : MonoBehaviour
 
         // PlayerManager 缺失或没接线时，退回从刚体往上找 Player 组件
         return body.GetComponentInParent<Player>();
-    }
-
-    /// <summary>粒子只在状态切换时 Play/Stop，避免每帧调用</summary>
-    private void SetParticlesActive(bool active)
-    {
-        if (windParticles == null) return;
-        if (_particlesActive == active) return;
-
-        _particlesActive = active;
-
-        if (active)
-            windParticles.Play();
-        else
-            windParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     }
 
     /// <summary>给单个刚体施加向上的风：力负责托举，速度上限负责匀速上升</summary>

@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class doorwithtrigger : MonoBehaviour
+public class updown : MonoBehaviour
 {
     public triggerfloor[] triggerfloors;
     private bool canOpen = false;
 
-    public float moveDistance = 4f;
-    public float moveSpeed = 8f;
+    public float moveDistance = 5f;
+    public float moveSpeed = 12f;
 
     private Vector3 closedPosition;
     private Vector3 openedPosition;
@@ -27,14 +27,14 @@ public class doorwithtrigger : MonoBehaviour
     void Update()
     {
         canOpen = true;
-        for(int i = 0; i < triggerfloors.Length; i++)
+        for (int i = 0; i < triggerfloors.Length; i++)
         {
-            if ( !triggerfloors[i].isPlayerOnFloor)
+            if (triggerfloors[i].isPlayerOnFloor)
             {
                 canOpen = false;
                 break;
             }
-            
+
         }
         if (canOpen)
         {

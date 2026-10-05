@@ -6,6 +6,7 @@ TagManager:
   tags:
   - triggerfloor
   - door
+  - box
   layers:
   - Default
   - TransparentFX

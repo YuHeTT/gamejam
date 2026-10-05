@@ -153,7 +153,7 @@ public static class WindAreaTools
         vel.space = ParticleSystemSimulationSpace.Local;        // Local：风区旋转后风向跟着转
         // x/y/z 三条曲线必须用同一个 mode，否则 Unity 会报
         // "Particle Velocity curves must all be in the same mode"
-        // （注意：这些模块没有暴露 xMode/yMode/zMode 属性，只能靠赋 MinMaxCurve 时带上的 mode 保证一致）
+        // （这些模块没有暴露 xMode/yMode/zMode 属性，只能靠赋 MinMaxCurve 时带上的 mode 保证一致）
         vel.x = new ParticleSystem.MinMaxCurve(0f, 0f);
         vel.y = new ParticleSystem.MinMaxCurve(1f, 4.5f);
         vel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
