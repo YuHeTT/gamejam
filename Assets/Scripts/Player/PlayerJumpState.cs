@@ -27,14 +27,5 @@ public class PlayerJumpState : PlayerState
         
         if(rb.velocity.y <= 0)
             stateMachine.ChangeState(player.airState);
-        else 
-        {
-            if(player.canDoubleJump)
-                if (player.jumpBufferTimer > 0 && !player.hasDoubleJumped)
-                {
-                    player.jumpBufferTimer = 0;
-                    stateMachine.ChangeState(player.doubleJumpState);
-                }
-        }
     }
 }

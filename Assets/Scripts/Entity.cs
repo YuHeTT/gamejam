@@ -14,9 +14,6 @@ public class Entity : MonoBehaviour
     protected bool leftCheck;
     protected bool rightCheck;
     [Space]
-    [SerializeField] protected Transform wallCheck;
-    [SerializeField] protected float wallCheckDistance;
-    [Space]
     [SerializeField] protected LayerMask whatIsGround;
     [SerializeField] protected float groundCheckDeviate = 0.36f;
     public int facingDir = 1;
@@ -42,7 +39,7 @@ public class Entity : MonoBehaviour
             this.SetVelocity(rb.velocity.x, -maxFallSpeed);
     }
 
-    #region 碰撞&墙体检测
+    #region 碰撞检测
     protected virtual void OnDrawGizmos()
     {   
         //地面检测
@@ -51,9 +48,6 @@ public class Entity : MonoBehaviour
         Gizmos.DrawLine(pos, pos + Vector2.down * groundCheckDistance);
         Gizmos.DrawLine(pos + Vector2.left * groundCheckDeviate, pos + Vector2.left * groundCheckDeviate + Vector2.down * groundCheckDistance);
         Gizmos.DrawLine(pos + Vector2.right * groundCheckDeviate, pos + Vector2.right * groundCheckDeviate + Vector2.down * groundCheckDistance);
-        //墙体检测
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(wallCheck.position,new Vector2(wallCheck.position.x + wallCheckDistance * facingDir ,wallCheck.position.y));
     }
     protected virtual void CollisionCheck()
     {
@@ -62,7 +56,6 @@ public class Entity : MonoBehaviour
         leftCheck = Physics2D.Raycast(pos + Vector2.left * groundCheckDeviate, Vector2.down, groundCheckDistance, whatIsGround);
         rightCheck = Physics2D.Raycast(pos + Vector2.right * groundCheckDeviate, Vector2.down, groundCheckDistance, whatIsGround);
     }
-    public virtual bool IsWallDetected() => Physics2D.Raycast(wallCheck.position,Vector2.right * facingDir,wallCheckDistance,whatIsGround);
     public virtual bool IsGroundDetected() => centerCheck || leftCheck || rightCheck;
     #endregion
 

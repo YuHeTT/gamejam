@@ -13,7 +13,6 @@ public class PlayerGroundedState : PlayerState
         base.Enter();
         stateTimer = player.coyoteTime;
         player.hasDashedInAir = false;
-        player.hasDoubleJumped = false;
     }
 
     public override void Exit()

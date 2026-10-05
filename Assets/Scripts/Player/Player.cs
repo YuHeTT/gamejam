@@ -9,19 +9,13 @@ public class Player : Entity
     public PlayerJumpState jumpState { get ; private set ; }
     public PlayerAirState airState { get ; private set ; }
     public PlayerDashState dashState { get ; private set ; }
-    public PlayerDoubleJumpState doubleJumpState { get ; private set ; }
-    public PlayerWallSlideState wallSlideState { get ; private set ; }
-    public PlayerWallJumpState wallJumpState { get ; private set ; }
     #endregion
 
     #region 信息
     [Header("Move&JumpInfo")]
     public float gravityScale = 5f;
     public float moveSpeed = 8;
-    public bool canDoubleJump;
-    public bool hasDoubleJumped;
     public float jumpSpeed = 20;
-    public float doubleJumpSpeed = 18;
     public float fallMultiplier = 3f;
     public float coyoteTime = 0.1f;
     public float jumpBuffer = 0.1f;
@@ -36,14 +30,6 @@ public class Player : Entity
     public float dashBuffer = 0.1f;
     public float dashBufferTimer;
     public float dashDir { get ; private set ; }
-
-    [Header("WallSlideInfo")]
-    public float freeWallSlideSpeed = 2.5f;
-    public float fromWallSpeedx = 8.0f;
-    public float fromWallSpeedy = 18.0f;
-    public float wallJumpBuffer = 0.15f;
-    public float wallJumpBufferTimer;
-    public float wallJumpDurationTime = 0.12f;
     #endregion
 
     protected override void Awake()
@@ -54,13 +40,9 @@ public class Player : Entity
         idleState = new PlayerIdleState(this, stateMachine, "Idle");
         moveState = new PlayerMoveState(this, stateMachine, "Move");
         jumpState = new PlayerJumpState(this, stateMachine, "Jump");
-        doubleJumpState = new PlayerDoubleJumpState(this,stateMachine, "Jump");
 
         airState  = new PlayerAirState (this, stateMachine, "Jump");
         dashState = new PlayerDashState(this, stateMachine, "Dash");
-
-        wallSlideState = new PlayerWallSlideState(this, stateMachine, "WallSlide");
-        wallJumpState = new PlayerWallJumpState(this,stateMachine,"Jump");
     }
 
     protected override void Start()
@@ -75,7 +57,6 @@ public class Player : Entity
         base.Update();
         CheckJumpInput();
         CheckDashInput();
-        CheckWallJumpInput();
         stateMachine.currentState.Update();
     }
 
@@ -130,20 +111,6 @@ public class Player : Entity
             }
             stateMachine.ChangeState(dashState);
         }       
-    }
-    #endregion
-
-    #region 蹭墙跳输入检测
-    private void CheckWallJumpInput()
-    {
-        if(wallJumpBufferTimer >= 0)
-        {
-            wallJumpBufferTimer -= Time.deltaTime;
-        }
-        if (Input.GetKeyDown(KeyCode.Space) && !IsGroundDetected())
-        {
-            wallJumpBufferTimer = wallJumpBuffer;
-        }
     }
     #endregion
 

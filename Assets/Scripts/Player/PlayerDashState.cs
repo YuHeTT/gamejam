@@ -30,12 +30,6 @@ public class PlayerDashState : PlayerState
     public override void Update()
     {
         base.Update();
-        if(!player.IsGroundDetected() && player.IsWallDetected())
-        {
-            stateMachine.ChangeState(player.wallSlideState);
-            return;
-        }
-
         if(stateTimer < 0)
         {   
             if(player.IsGroundDetected())
