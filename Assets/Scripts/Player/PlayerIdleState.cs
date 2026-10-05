@@ -24,13 +24,7 @@ public class PlayerIdleState : PlayerGroundedState
         base.Update();
         if(!IsCurrentState()) return;
 
-        if (player.attackBufferTimer > 0)
-        {
-            player.attackBufferTimer = 0;
-            stateMachine.ChangeState(player.primaryAttackState);
-        }
-
-        if (xInput != 0 && !player.isBusy)
+        if (xInput != 0)
         {
             stateMachine.ChangeState(player.moveState);
         }

@@ -32,15 +32,6 @@ public class PlayerGroundedState : PlayerState
             return;
         }
 
-        //地面上发动反击的条件：缓冲大于零且冷却已好
-        if (player.counterAttackBufferTimer > 0f && player.counterAttackCoolDownTimer < 0)
-        {
-            player.counterAttackBufferTimer = 0f;
-            player.counterAttackCoolDownTimer = player.counterAttackCoolDownTime;
-
-            stateMachine.ChangeState(player.counterAttackState);
-            return;
-        }
         //跳跃
         if (player.jumpBufferTimer > 0)
         {

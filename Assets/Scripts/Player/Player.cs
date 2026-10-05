@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public class Player : Entity
@@ -13,10 +12,6 @@ public class Player : Entity
     public PlayerDoubleJumpState doubleJumpState { get ; private set ; }
     public PlayerWallSlideState wallSlideState { get ; private set ; }
     public PlayerWallJumpState wallJumpState { get ; private set ; }
-    public PlayerPrimaryAttackState primaryAttackState { get ; private set ; }
-    public PlayerCounterAttackState counterAttackState { get ; private set ; }
-    public PlayerSuccessfulCounterAttackState successFullCounterAttackState { get ; private set ; }
-    
     #endregion
 
     #region 信息
@@ -49,31 +44,8 @@ public class Player : Entity
     public float wallJumpBuffer = 0.15f;
     public float wallJumpBufferTimer;
     public float wallJumpDurationTime = 0.12f;
-
-    [Header("AttackInfo")]
-    public int comboCounter;
-    public float attackBuffer = 0.1f;
-    public float attackBufferTimer;
-    public float lastTimeAttack;
-    public float comboWindow = 0.5f;
-    public float attackDir;
-    public Vector2[] attackMovement;
-    public AttackHitbox[] attackHitboxes;
-    public AttackHitbox currentHitBox { get ; private set ; }
-
-    public float counterAttackDuration = 0.2f;
-    public float counterAttackBuffer = 0.1f;
-    public float counterAttackBufferTimer;
-    public float counterAttackCoolDownTime;
-    public float counterAttackCoolDownTimer;
-    public bool isBusy { get ; private set ; }
-
-    private bool clashWindowOpen;
-    private Coroutine counterSuccessRoutine;
-
-    public SkillManager skill;
-
     #endregion
+
     protected override void Awake()
     {
         base.Awake();
@@ -89,18 +61,11 @@ public class Player : Entity
 
         wallSlideState = new PlayerWallSlideState(this, stateMachine, "WallSlide");
         wallJumpState = new PlayerWallJumpState(this,stateMachine,"Jump");
-
-        primaryAttackState = new PlayerPrimaryAttackState(this,stateMachine, "Attack");
-
-        counterAttackState = new PlayerCounterAttackState(this,stateMachine,"CounterAttack");
-        successFullCounterAttackState = new PlayerSuccessfulCounterAttackState(this,stateMachine,"SuccessfulCounterAttack");
-        //......
     }
 
     protected override void Start()
     {
         base.Start();
-        skill = SkillManager.instance;
         rb.gravityScale = gravityScale;
         stateMachine.Initialize(idleState);
     }
@@ -111,17 +76,9 @@ public class Player : Entity
         CheckJumpInput();
         CheckDashInput();
         CheckWallJumpInput();
-        CheckAttackInput();
-        CheckCounterAttackInput();
         stateMachine.currentState.Update();
     }
-    //协程
-    public IEnumerator BusyFor(float _seconds)
-    {
-        isBusy = true;
-        yield return new WaitForSeconds(_seconds);
-        isBusy = false;
-    } 
+
     public void AnimationTrigger() => stateMachine.currentState.AnimationFinishTrigger();
 
     #region 跳跃输入检测
@@ -188,114 +145,6 @@ public class Player : Entity
             wallJumpBufferTimer = wallJumpBuffer;
         }
     }
-
-    #endregion
-
-    #region 攻击输入检测
-    private void CheckAttackInput()
-    {
-        if(attackBufferTimer > 0)
-            attackBufferTimer -= Time.deltaTime;
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            attackBufferTimer = attackBuffer;
-        }
-    }
-    //连击判断
-    public void SetAttackHitBox(int index)
-    {
-        ClearAttackHitBox();
-
-        if(attackHitboxes == null || index < 0 || index >= attackHitboxes.Length || attackHitboxes[index] == null)
-        {
-            return;
-        }
-        currentHitBox = attackHitboxes[index];
-    }
-
-    public void ClearAttackHitBox()
-    {
-        if (currentHitBox != null)
-        {
-            currentHitBox.DisableHitbox();
-            currentHitBox = null;
-        }
-    }
-
-    #endregion
-
-    #region 拼刀检测
-    public void OpenClashWindow()
-    {
-        if (stateMachine.currentState == primaryAttackState)
-        {
-            clashWindowOpen = true;
-        }
-    }
-
-    public void CloseClashWindow() => clashWindowOpen = false;
-
-    public override bool CanClash(Entity opponent)
-    {
-        return clashWindowOpen &&
-            stateMachine.currentState == primaryAttackState &&
-            opponent is Enemy;
-    }
-
-    public override void OnClash(Entity opponent)
-    {
-        CloseClashWindow();
-    }
-    #endregion
-
-    #region 反击检测
-    public override bool CanCounter(AttackHitbox incomingAttack)
-    {
-        return incomingAttack.CanBeCountered &&
-            incomingAttack.Owner is Enemy &&
-            stateMachine.currentState == counterAttackState;
-    }
-
-    public override void OnCounterSuccess(Entity attacker)
-    {
-        if (counterSuccessRoutine == null)
-        {
-            counterSuccessRoutine = StartCoroutine(
-                CompleteCounterAttack(attacker));
-        }
-    }
-
-    private IEnumerator CompleteCounterAttack(Entity attacker)
-    {
-        while (TimeManager.IsFrameFrozen)
-        {
-            yield return null;
-        }
-
-        counterSuccessRoutine = null;
-
-        if (stateMachine.currentState == counterAttackState)
-        {
-            stateMachine.ChangeState(successFullCounterAttackState);
-        }
-
-        attacker?.OnCountered(this);
-    }
-    private void CheckCounterAttackInput()
-    {
-        if(counterAttackCoolDownTimer >= 0)
-            counterAttackCoolDownTimer -= Time.deltaTime;
-            
-        if (counterAttackBufferTimer > 0f)
-        {
-            counterAttackBufferTimer -= Time.deltaTime;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Mouse1))
-        {
-            counterAttackBufferTimer = counterAttackBuffer;
-        }
-    }
     #endregion
 
     //水平移动控制
@@ -303,5 +152,4 @@ public class Player : Entity
     {
         SetVelocity(PlayerState.xInput * moveSpeed, rb.velocity.y);
     }
-
 }
