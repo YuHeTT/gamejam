@@ -14,11 +14,17 @@ public class Entity : MonoBehaviour
     protected bool leftCheck;
     protected bool rightCheck;
     [Space]
+    [Tooltip("地面所在层的名称。代码按名称解析，避免层未命名时掩码被清成 0。")]
+    [SerializeField] protected string groundLayerName = "Ground";
+    [Tooltip("备用掩码，仅当上面的层名称不存在时才会用到。")]
     [SerializeField] protected LayerMask whatIsGround;
     [SerializeField] protected float groundCheckDeviate = 0.36f;
     public int facingDir = 1;
     public bool facingRight = true;
     public float maxFallSpeed = 25f;
+
+    /// <summary>运行时解析出的地面层掩码，供射线检测使用。</summary>
+    protected int groundMask;
 
     protected virtual void Awake()
     {
@@ -30,10 +36,48 @@ public class Entity : MonoBehaviour
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
 
+        ResolveGroundMask();
+
         if (groundCheck == null)
         {
             Debug.LogError($"{name} 未指定 groundCheck，地面检测将失效。", this);
             enabled = false;
+        }
+    }
+
+    /// <summary>
+    /// 按层名称解析地面掩码。
+    /// 说明：LayerMask 在 Inspector 中只能勾选"已命名"的层，
+    /// 层未命名时会被 Unity 静默序列化成 0（Nothing），
+    /// 导致地面检测永远失败、角色表现为永久浮空。
+    /// 因此这里以"层名称"为唯一事实来源，避免该问题复现。
+    /// </summary>
+    protected virtual void ResolveGroundMask()
+    {
+        int layer = LayerMask.NameToLayer(groundLayerName);
+
+        if (layer >= 0)
+        {
+            groundMask = 1 << layer;
+
+            // 若 Inspector 中的掩码与层名称不一致，以层名称为准并给出提示
+            if (whatIsGround.value != groundMask)
+            {
+                Debug.LogWarning(
+                    $"{name}: whatIsGround 掩码({whatIsGround.value}) 与层 '{groundLayerName}'(值 {groundMask}) 不一致，" +
+                    $"已按层名称自动修正。", this);
+            }
+            return;
+        }
+
+        // 找不到层名称时退回 Inspector 掩码
+        groundMask = whatIsGround.value;
+
+        if (groundMask == 0)
+        {
+            Debug.LogError(
+                $"{name}: 找不到名为 '{groundLayerName}' 的层，且 whatIsGround 掩码为 0(Nothing)，" +
+                $"地面检测将永远失败。请在 Project Settings → Tags and Layers 中添加该层。", this);
         }
     }
 
@@ -48,8 +92,10 @@ public class Entity : MonoBehaviour
     #region 碰撞检测
     protected virtual void OnDrawGizmos()
     {   
-        //地面检测
-        Gizmos.color = Color.red;
+        if (groundCheck == null) return;
+
+        //检测到地面=绿色，未检测到=红色，便于在 Scene 视图快速定位问题
+        Gizmos.color = IsGroundDetected() ? Color.green : Color.red;
         Vector2 pos = groundCheck.position;
         Gizmos.DrawLine(pos, pos + Vector2.down * groundCheckDistance);
         Gizmos.DrawLine(pos + Vector2.left * groundCheckDeviate, pos + Vector2.left * groundCheckDeviate + Vector2.down * groundCheckDistance);
@@ -58,9 +104,9 @@ public class Entity : MonoBehaviour
     protected virtual void CollisionCheck()
     {
         Vector2 pos = groundCheck.position;
-        centerCheck = Physics2D.Raycast(pos, Vector2.down, groundCheckDistance, whatIsGround);
-        leftCheck = Physics2D.Raycast(pos + Vector2.left * groundCheckDeviate, Vector2.down, groundCheckDistance, whatIsGround);
-        rightCheck = Physics2D.Raycast(pos + Vector2.right * groundCheckDeviate, Vector2.down, groundCheckDistance, whatIsGround);
+        centerCheck = Physics2D.Raycast(pos, Vector2.down, groundCheckDistance, groundMask);
+        leftCheck = Physics2D.Raycast(pos + Vector2.left * groundCheckDeviate, Vector2.down, groundCheckDistance, groundMask);
+        rightCheck = Physics2D.Raycast(pos + Vector2.right * groundCheckDeviate, Vector2.down, groundCheckDistance, groundMask);
     }
     public virtual bool IsGroundDetected() => centerCheck || leftCheck || rightCheck;
     #endregion
