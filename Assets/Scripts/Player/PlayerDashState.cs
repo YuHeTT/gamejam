@@ -12,8 +12,6 @@ public class PlayerDashState : PlayerState
     {
         base.Enter();
 
-        player.skill.clone.CreateClone(player.transform);
-
         rb.gravityScale = 0;
         player.SetVelocity(player.dashSpeed * player.dashDir,0);
         stateTimer = player.dashDuration;  

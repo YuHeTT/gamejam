@@ -24,12 +24,6 @@ public class PlayerMoveState : PlayerGroundedState
         if(!IsCurrentState()) return;
         player.HorizontalMoveController();
 
-        if (player.attackBufferTimer > 0)
-        {
-            player.attackBufferTimer = 0;
-            stateMachine.ChangeState(player.primaryAttackState);
-        }
-        
         if(xInput == 0)
             stateMachine.ChangeState(player.idleState);
     }
