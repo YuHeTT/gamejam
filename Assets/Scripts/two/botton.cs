@@ -5,8 +5,8 @@ using UnityEngine;
 public class botton : MonoBehaviour
 {
     public GameObject door;
-    public float moveDistance = 3f;
-    public float moveSpeed = 6f;
+    public float moveDistance = 4f;
+    public float moveSpeed = 8f;
 
     private Vector3 closedPosition;
     private Vector3 openedPosition;
