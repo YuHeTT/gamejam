@@ -1,0 +1,67 @@
+# ============================================================
+# Unity 工程 .gitignore
+# 重要：绝不要忽略 *.meta 文件！它们保存资源 GUID，
+#       缺失会导致场景/预制体引用全部断开。
+# ============================================================
+
+# ---------- Unity 自动生成的目录（体积巨大，必须忽略）----------
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Asset Store 下载的原始包（体积大，可让队友自行下载）
+/[Aa]ssets/[Aa]ssetStoreTools*
+/[Aa]ssets/[Pp]lugins/[Ee]ditor/JetBrains*
+
+# ---------- Visual Studio / Rider / VS Code 生成 ----------
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.njsproj
+
+# ---------- Unity 崩溃与调试产物 ----------
+sysinfo.txt
+*.stackdump
+crashlytics-build.properties
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ---------- 构建产物 ----------
+*.apk
+*.aab
+*.ipa
+*.unitypackage
+*.app
+/[Ee]xported[Oo]bj/
+
+# ---------- 操作系统 ----------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ---------- 本地备份 / 误建目录 ----------
+*gamejam_OLD_删除我*

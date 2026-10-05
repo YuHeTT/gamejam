@@ -1,0 +1,40 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerJumpState : PlayerState
+{
+    public PlayerJumpState(Player _player, PlayerStateMachine _stateMachine, string _animBoolName) : base(_player, _stateMachine, _animBoolName)
+    {
+    }
+
+    public override void Enter()
+    {
+        base.Enter();
+        player.SetVelocity(rb.velocity.x,player.jumpSpeed);
+    }
+
+    public override void Exit()
+    {
+        base.Exit();
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        player.HorizontalMoveController();
+        player.JumpHeightController();
+        
+        if(rb.velocity.y <= 0)
+            stateMachine.ChangeState(player.airState);
+        else 
+        {
+            if(player.canDoubleJump)
+                if (player.jumpBufferTimer > 0 && !player.hasDoubleJumped)
+                {
+                    player.jumpBufferTimer = 0;
+                    stateMachine.ChangeState(player.doubleJumpState);
+                }
+        }
+    }
+}

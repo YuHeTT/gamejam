@@ -1,0 +1,36 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerMoveState : PlayerGroundedState
+{
+    public PlayerMoveState(Player _player, PlayerStateMachine _stateMachine, string _animBoolName) : base(_player, _stateMachine, _animBoolName)
+    {
+    }
+
+    public override void Enter()
+    {
+        base.Enter();
+    }
+
+    public override void Exit()
+    {
+        base.Exit();
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        if(!IsCurrentState()) return;
+        player.HorizontalMoveController();
+
+        if (player.attackBufferTimer > 0)
+        {
+            player.attackBufferTimer = 0;
+            stateMachine.ChangeState(player.primaryAttackState);
+        }
+        
+        if(xInput == 0)
+            stateMachine.ChangeState(player.idleState);
+    }
+}
