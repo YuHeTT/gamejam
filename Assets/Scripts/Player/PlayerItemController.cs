@@ -17,7 +17,7 @@ public class PlayerItemController : MonoBehaviour
 
     [Header("Keys")]
     public KeyCode pickUpKey = KeyCode.J;
-    public KeyCode useKey    = KeyCode.I;
+    // 使用键由当前道具决定（Item.useKey），默认 I，可被道具重写（如「蓦」用 L）
 
     /// <summary>当前持有的道具</summary>
     public Item CurrentItem { get; private set; }
@@ -37,16 +37,24 @@ public class PlayerItemController : MonoBehaviour
         if (pickUpCooldownTimer > 0) pickUpCooldownTimer -= Time.deltaTime;
 
         if (Input.GetKeyDown(pickUpKey)) TryPickUp();
-        if (Input.GetKeyDown(useKey))    UseCurrentItem();
+        if (CurrentItem != null && Input.GetKeyDown(CurrentItem.useKey)) UseCurrentItem();
     }
 
-    /// <summary>拾取/交换。返回是否真的发生了交互</summary>
+    /// <summary>拾取/交换/丢弃。返回是否真的发生了交互。<br/>
+    /// 空手 + 附近有道具 → 拾取；持道具 + 附近有道具 → 交换；持道具 + 附近无道具 → 丢弃。</summary>
     public bool TryPickUp()
     {
         if (pickUpCooldownTimer > 0) return false;
 
         Item target = FindNearestItem();
-        if (target == null || target == CurrentItem) return false;
+
+        //附近没有可交互的道具：若手上持有道具则丢弃，否则无事发生
+        if (target == null || target == CurrentItem)
+        {
+            if (CurrentItem == null) return false;
+            DropCurrentItem();
+            return true;
+        }
 
         if (CurrentItem != null)          // 交换：先把旧道具放回世界
         {
@@ -60,6 +68,18 @@ public class PlayerItemController : MonoBehaviour
         OnItemChanged?.Invoke(target);
         pickUpCooldownTimer = pickUpCooldown;
         return true;
+    }
+
+    /// <summary>丢弃当前持有的道具</summary>
+    private void DropCurrentItem()
+    {
+        if (CurrentItem == null) return;
+
+        Item old = CurrentItem;
+        CurrentItem = null;
+        old.ExitCarriedState(player, old.GetDropPosition(player.transform.position));
+        OnItemChanged?.Invoke(null);
+        pickUpCooldownTimer = pickUpCooldown;
     }
 
     /// <summary>使用当前道具的能力</summary>

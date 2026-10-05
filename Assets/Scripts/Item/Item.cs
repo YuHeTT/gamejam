@@ -39,6 +39,9 @@ public class Item : MonoBehaviour
 
     /// <summary>放回世界的位置，子类可重写</summary>
     public virtual Vector2 GetDropPosition(Vector2 playerPos) => playerPos + dropOffset;
+
+    /// <summary>该道具在道具栏中的使用按键，默认 I；子类可重写成其他键（如 L）</summary>
+    public virtual KeyCode useKey => KeyCode.I;
     #endregion
 
     #region 世界/持有状态切换（由 PlayerItemController 调用，子类不要直接调用）
@@ -56,6 +59,9 @@ public class Item : MonoBehaviour
         Holder    = null;
         if (rb != null)
         {
+            //自由落体：冻结 X 轴与旋转，落直且不会滑下平台边缘
+            rb.constraints     = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+            rb.gravityScale    = 1f;
             rb.velocity        = Vector2.zero;
             rb.angularVelocity = 0f;
             rb.position        = worldPos;   // 必须走 rb.position，物理查询才会用到位姿
