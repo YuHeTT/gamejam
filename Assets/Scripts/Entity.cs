@@ -29,6 +29,12 @@ public class Entity : MonoBehaviour
     {
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
+
+        if (groundCheck == null)
+        {
+            Debug.LogError($"{name} 未指定 groundCheck，地面检测将失效。", this);
+            enabled = false;
+        }
     }
 
     protected virtual void Update()
