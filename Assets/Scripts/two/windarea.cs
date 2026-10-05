@@ -5,7 +5,8 @@ using UnityEngine;
 /// <summary>
 /// 风扇风区：进入触发器范围的玩家会受到持续向上的风场，被托着上升。<br/>
 /// 作用方式：FixedUpdate 里给玩家刚体施加向上的力（AddForce），并把上升速度限制在 windSpeed 内，
-/// 因此风是"托举"而不是"瞬移"；离开风区后交给重力自然下坠。
+/// 因此风是"托举"而不是"瞬移"；离开风区后交给重力自然下坠。<br/>
+/// 只在白天吹风（TimeOfDayManager.IsNight == false）；黑夜时风与粒子一并停掉，完全没有效果。
 /// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class windarea : MonoBehaviour
@@ -59,6 +60,8 @@ public class windarea : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // 风口只在白天生效：黑夜时既不施力、也不显示粒子
+        bool dayTime = !TimeOfDayManager.IsNight;
         bool blow = false;
 
         // 倒序遍历，便于安全移除已离开或已销毁的对象
@@ -80,8 +83,8 @@ public class windarea : MonoBehaviour
                 continue;
             }
 
-            // 只有漂浮状态(isFloating)才吃风：没拿「幕」时站在风区里完全没效果
-            if (CanBlow(body))
+            // 只有白天且满足受风条件（如漂浮状态）时才吃风
+            if (dayTime && CanBlow(body))
             {
                 ApplyWind(body);
                 blow = true;
@@ -89,7 +92,7 @@ public class windarea : MonoBehaviour
         }
 
         PruneDestroyedKeys();
-        SetParticlesActive(!stopParticlesWhenInactive || blow);
+        SetParticlesActive(dayTime && (!stopParticlesWhenInactive || blow));
     }
 
     /// <summary>
