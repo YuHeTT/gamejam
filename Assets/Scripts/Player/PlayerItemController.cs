@@ -34,6 +34,9 @@ public class PlayerItemController : MonoBehaviour
 
     private void Update()
     {
+        if (player != null && player.IsTeleporting)
+            return;
+
         if (pickUpCooldownTimer > 0) pickUpCooldownTimer -= Time.deltaTime;
 
         if (Input.GetKeyDown(pickUpKey)) TryPickUp();

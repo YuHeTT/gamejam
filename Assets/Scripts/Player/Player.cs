@@ -10,6 +10,9 @@ public class Player : Entity
     public PlayerAirState airState { get ; private set ; }
     public PlayerDashState dashState { get ; private set ; }
     public PlayerStuckState stuckState { get ; private set ; }
+    public PlayerTeleportState teleportState { get ; private set ; }
+    public PlayerTombstoneTeleport TombstoneTeleport { get ; private set ; }
+    public bool IsTeleporting => TombstoneTeleport != null && TombstoneTeleport.IsTeleporting;
     #endregion
 
     #region 信息
@@ -63,6 +66,14 @@ public class Player : Entity
         airState  = new PlayerAirState (this, stateMachine, "Jump");
         dashState = new PlayerDashState(this, stateMachine, "Dash");
         stuckState = new PlayerStuckState(this, stateMachine, "Idle");
+        teleportState = new PlayerTeleportState(this, stateMachine, "Idle");
+
+        TombstoneTeleport = GetComponent<PlayerTombstoneTeleport>();
+        if (TombstoneTeleport == null)
+            TombstoneTeleport = gameObject.AddComponent<PlayerTombstoneTeleport>();
+
+        if (GetComponent<PlayerGraveTeleportController>() == null)
+            gameObject.AddComponent<PlayerGraveTeleportController>();
     }
 
     protected override void Start()
@@ -87,6 +98,9 @@ public class Player : Entity
         UpdateDashCooldown();
         stateMachine.currentState.Update();
 
+        if (IsTeleporting)
+            return;
+
         //漂浮是常驻标记：无论当前处于哪个状态，都正常受重力加速，并把下落速度限制为匀速
         if (isFloating)
         {
@@ -103,6 +117,12 @@ public class Player : Entity
     {
         if(jumpBufferTimer > 0)
             jumpBufferTimer -= Time.deltaTime;
+
+        if (IsTeleporting)
+        {
+            jumpBufferTimer = 0;
+            return;
+        }
 
         //漂浮/卡住期间禁用跳跃
         if (isFloating || isStuck)
@@ -144,6 +164,7 @@ public class Player : Entity
     public bool TryDash()
     {
         if (!canDash) return false;
+        if (IsTeleporting) return false;
         if (isFloating || isStuck) return false;
         if (dashCoolDownTimer > 0 || hasDashedInAir) return false;
 

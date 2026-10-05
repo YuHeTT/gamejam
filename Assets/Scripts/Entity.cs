@@ -109,6 +109,34 @@ public class Entity : MonoBehaviour
         rightCheck = Physics2D.Raycast(pos + Vector2.right * groundCheckDeviate, Vector2.down, groundCheckDistance, groundMask);
     }
     public virtual bool IsGroundDetected() => centerCheck || leftCheck || rightCheck;
+
+    /// <summary>供道具/传送等使用的地面检测点</summary>
+    public Transform GroundCheck => groundCheck;
+
+    /// <summary>从脚底向下射线，命中 Ground 层时返回 true</summary>
+    public bool TryGetGroundHit(out RaycastHit2D hit, bool ignoreTombstones = false)
+    {
+        hit = default;
+        if (groundCheck == null)
+            return false;
+
+        float dist = groundCheckDistance + 1f;
+        RaycastHit2D[] hits = Physics2D.RaycastAll(groundCheck.position, Vector2.down, dist, groundMask);
+        foreach (RaycastHit2D candidate in hits)
+        {
+            if (candidate.collider == null)
+                continue;
+            if (ignoreTombstones && candidate.collider.GetComponentInParent<TombstoneMarker>() != null)
+                continue;
+            hit = candidate;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>传送协程中需手动刷新地面射线时使用</summary>
+    public void CollisionCheckPublic() => CollisionCheck();
     #endregion
 
     #region 翻转控制
