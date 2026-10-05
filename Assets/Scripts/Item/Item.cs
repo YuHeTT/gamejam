@@ -42,6 +42,9 @@ public class Item : MonoBehaviour
 
     /// <summary>该道具在道具栏中的使用按键，默认 I；子类可重写成其他键（如 L）</summary>
     public virtual KeyCode useKey => KeyCode.I;
+
+    /// <summary>持有时每帧调用，道具可在此处理自己的额外按键（如 S）</summary>
+    public virtual void OnCarriedUpdate(Player player) { }
     #endregion
 
     #region 世界/持有状态切换（由 PlayerItemController 调用，子类不要直接调用）

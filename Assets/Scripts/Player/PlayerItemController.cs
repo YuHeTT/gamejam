@@ -40,7 +40,13 @@ public class PlayerItemController : MonoBehaviour
         if (pickUpCooldownTimer > 0) pickUpCooldownTimer -= Time.deltaTime;
 
         if (Input.GetKeyDown(pickUpKey)) TryPickUp();
-        if (CurrentItem != null && Input.GetKeyDown(CurrentItem.useKey)) UseCurrentItem();
+
+        if (CurrentItem != null)
+        {
+            if (Input.GetKeyDown(CurrentItem.useKey)) UseCurrentItem();
+            //UseCurrentItem 可能因消耗而清空槽位，需再判一次
+            if (CurrentItem != null) CurrentItem.OnCarriedUpdate(player);
+        }
     }
 
     /// <summary>拾取/交换/丢弃。返回是否真的发生了交互。<br/>

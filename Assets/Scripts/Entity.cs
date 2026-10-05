@@ -110,6 +110,11 @@ public class Entity : MonoBehaviour
     }
     public virtual bool IsGroundDetected() => centerCheck || leftCheck || rightCheck;
 
+    /// <summary>地面检测参数（只读），供复制体等以玩家为模板拷贝</summary>
+    public float GroundCheckDistance => groundCheckDistance;
+    public float GroundCheckDeviate => groundCheckDeviate;
+    public int GroundMask => groundMask;
+
     /// <summary>供道具/传送等使用的地面检测点</summary>
     public Transform GroundCheck => groundCheck;
 

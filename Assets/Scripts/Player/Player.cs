@@ -131,7 +131,7 @@ public class Player : Entity
             return;
         }
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if(Input.GetKeyDown(KeyCode.K))
         {
             jumpBufferTimer = jumpBuffer;
         }
@@ -141,7 +141,7 @@ public class Player : Entity
     #region 跳跃高度控制
     public void JumpHeightController()
     {
-        if (rb.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
+        if (rb.velocity.y > 0 && !Input.GetKey(KeyCode.K))
         {
             rb.gravityScale = gravityScale * fallMultiplier;
         }
