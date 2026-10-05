@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class triggerfloor : MonoBehaviour
 {
-    private bool isPlayerOnFloor = false;
+    [HideInInspector]public bool isPlayerOnFloor = false;
 
     private void OnTriggerStay2D(Collider2D collision)
     {
