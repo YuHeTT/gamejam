@@ -38,7 +38,7 @@ public class botton : MonoBehaviour
             moveSpeed * Time.deltaTime);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         opendoor();
     }
