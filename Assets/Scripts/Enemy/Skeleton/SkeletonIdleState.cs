@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 
 public class SkeletonIdleState : SkeletonGroundedState
