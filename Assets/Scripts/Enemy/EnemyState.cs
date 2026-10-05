@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using UnityEditor;
 using UnityEngine;
 
 public class EnemyState
