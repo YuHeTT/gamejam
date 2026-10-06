@@ -53,16 +53,19 @@ public class BalanceElevator : MonoBehaviour
     public bool allowPlayerAsWeight = true;
 
     [Header("读数容错")]
-    [Tooltip("读数归零后仍沿用上一次方向的时间（秒）。防止乘客弹跳造成的瞬时丢读把目标打成 0、进度被撤销，" +
-             "表现为平台来回抖动、且速度越调越慢。调大会降低抖动、但读数若持续抖动会锁住方向、回不到水平位")]
-    public float weightHoldTime = 0.1f;
+    [Tooltip("质量读数的指数平滑时间（秒）")]
+    public float massSmoothingTime = 0.12f;
+    [Tooltip("左右质量差小于此值时视为相等，并立即回到水平位")]
+    public float massDeadZone = 0.08f;
+    [Tooltip("改变升降方向前需要稳定超过死区的时间（秒）")]
+    public float directionSwitchDelay = 0.08f;
 
     // offset：左平台相对水平平衡位的竖直偏移，正 = 左高右低（即左轻右重）
     private float offset;
 
-    // 上一次有效读数的方向（-1 = 左重、+1 = 右重）与保持计时，用于容忍瞬时丢读
+    // 上一次有效读数的方向（-1 = 左重、+1 = 右重）
     private float _lastDir;
-    private float _holdTimer;
+    private float _directionTimer;
 
     // 两个平台上表面的原始高度（水平平衡位）
     private float leftBaseY;
@@ -71,6 +74,8 @@ public class BalanceElevator : MonoBehaviour
     // 当前两侧总质量
     private float leftMass;
     private float rightMass;
+    private float _filteredLeftMass;
+    private float _filteredRightMass;
 
     private void Awake()
     {
@@ -109,28 +114,39 @@ public class BalanceElevator : MonoBehaviour
         leftMass  = (leftSensor  != null) ? leftSensor.Mass  : 0f;
         rightMass = (rightSensor != null) ? rightSensor.Mass : 0f;
 
-        // 2) 质量差决定目标偏移；相等 ⇒ 目标为 0，即回到水平平衡位
-        //    正质量差（左重）⇒ 左平台下降、右平台上升 ⇒ offset 取负（offset 正 = 左高右低）
-        //
-        //    关键：读数一旦归零就立刻把目标打成 0 会让平台开始往回走、把进度全部撤销。
-        //    这里给方向加一段保持时间，瞬时丢读不再改变方向。
-        float netWeight = leftMass - rightMass;
-        if (netWeight > 0f)
+        // 2) 先平滑质量，再计算方向。传感器本身也有接触滞后，
+        //    这里再做一层轻量平滑，防止平台高速移动时方向在一两个物理帧内反复翻转。
+        float blend = 1f - Mathf.Exp(-Time.fixedDeltaTime / Mathf.Max(0.001f, massSmoothingTime));
+        _filteredLeftMass = Mathf.Lerp(_filteredLeftMass, leftMass, blend);
+        _filteredRightMass = Mathf.Lerp(_filteredRightMass, rightMass, blend);
+
+        // 左重时左端下降（offset 为负），右重时右端下降（offset 为正）。
+        float netWeight = _filteredLeftMass - _filteredRightMass;
+        if (Mathf.Abs(netWeight) <= Mathf.Max(0f, massDeadZone))
         {
-            _lastDir = -1f;
-            _holdTimer = weightHoldTime;
+            // 等重必须清除旧方向，目标回到 0，而不是继续沿旧方向走满行程。
+            _lastDir = 0f;
+            _directionTimer = 0f;
         }
-        else if (netWeight < 0f)
+        else
         {
-            _lastDir = 1f;
-            _holdTimer = weightHoldTime;
-        }
-        else if (_holdTimer > 0f)
-        {
-            _holdTimer -= Time.fixedDeltaTime;
+            float desiredDir = netWeight > 0f ? -1f : 1f;
+            if (!Mathf.Approximately(desiredDir, _lastDir))
+            {
+                _directionTimer += Time.fixedDeltaTime;
+                if (_directionTimer >= Mathf.Max(0f, directionSwitchDelay))
+                {
+                    _lastDir = desiredDir;
+                    _directionTimer = 0f;
+                }
+            }
+            else
+            {
+                _directionTimer = 0f;
+            }
         }
 
-        float targetOffset = (_holdTimer > 0f) ? _lastDir * maxTravel : 0f;
+        float targetOffset = _lastDir * maxTravel;
 
         // 3) 严格匀速逼近目标：每物理步位移恒定，且不会过冲（碰到地面自然停住）
         offset = Mathf.MoveTowards(offset, targetOffset, moveSpeed * Time.fixedDeltaTime);
