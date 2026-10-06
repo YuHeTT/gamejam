@@ -11,6 +11,12 @@ public class Item : MonoBehaviour
     [Header("DropInfo")]
     public Vector2 dropOffset = Vector2.zero; // 从玩家身上放回世界时的偏移
 
+    [Header("机关影响")]
+    [Tooltip("勾选：本道具落在踏板上时能触发踏板机关（triggerfloor）")]
+    public bool canTriggerPedal = false;
+    [Tooltip("勾选：本道具压在天平平台上时计入配重，影响两侧平衡")]
+    public bool canWeighOnBalance = false;
+
     protected SpriteRenderer sr;
     protected Rigidbody2D rb;
     protected Collider2D col;

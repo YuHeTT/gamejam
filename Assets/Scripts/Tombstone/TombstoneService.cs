@@ -25,6 +25,12 @@ public class TombstoneService : MonoBehaviour
     [Tooltip("哪些层的物体算作「可粘附的移动地面」。留空(Nothing)时按名称解析为 Ground 层。")]
     public LayerMask movingGroundMask;
 
+    [Header("机关影响")]
+    [Tooltip("勾选：墓碑可以触发踏板机关（triggerfloor）")]
+    public bool canTriggerPedal = false;
+    [Tooltip("勾选：墓碑可以作为天平配重，影响两侧平衡")]
+    public bool canWeighOnBalance = false;
+
     public bool HasActiveTombstone => activeMarker != null;
     public TombstoneMarker ActiveMarker => activeMarker;
 
