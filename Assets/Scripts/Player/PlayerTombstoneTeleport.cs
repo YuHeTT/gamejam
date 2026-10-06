@@ -63,10 +63,16 @@ public class PlayerTombstoneTeleport : MonoBehaviour
     private IEnumerator TeleportRoutine(Vector2 feetTarget)
     {
         Rigidbody2D rb = player.rb;
+        RigidbodyType2D origBodyType = rb.bodyType;
+        float origGravity = rb.gravityScale;
+        Vector2 collapsePos = rb.position;
+
+        // 错切期间：碰撞箱留在原地，角色不因重力/速度移动
         rb.velocity = Vector2.zero;
-        rb.simulated = false;
+        rb.gravityScale = 0f;
+        rb.bodyType = RigidbodyType2D.Kinematic;
         if (boxCol != null)
-            boxCol.enabled = false;
+            boxCol.enabled = true;
 
         ClearLocomotionAnim();
         shearVisual.BeginEffectMode();
@@ -77,12 +83,19 @@ public class PlayerTombstoneTeleport : MonoBehaviour
         while (collapseTimer < collapseLen)
         {
             collapseTimer += Time.deltaTime;
+            rb.velocity = Vector2.zero;
+            rb.position = collapsePos;
+            player.transform.position = collapsePos;
             shearVisual.SetCollapse(Mathf.Clamp01(collapseTimer / collapseLen));
             yield return null;
         }
 
         shearVisual.SetCollapse(1f);
         shearVisual.SetHidden();
+
+        if (boxCol != null)
+            boxCol.enabled = false;
+        rb.simulated = false;
 
         Vector2 emergeStart = feetTarget + emergeStartOffset;
         AlignFeetTo(emergeStart);
@@ -103,9 +116,10 @@ public class PlayerTombstoneTeleport : MonoBehaviour
 
         if (boxCol != null)
             boxCol.enabled = true;
+        rb.bodyType = origBodyType;
         rb.simulated = true;
         rb.velocity = Vector2.zero;
-        rb.gravityScale = player.gravityScale;
+        rb.gravityScale = origGravity != 0f ? origGravity : player.gravityScale;
 
         player.CollisionCheckPublic();
 
