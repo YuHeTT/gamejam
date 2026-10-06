@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 491369505540457532}
   - component: {fileID: 514325346145274730}
   - component: {fileID: 7506753882682782463}
+  - component: {fileID: -1909956493503031154}
   m_Layer: 0
   m_Name: door_floor
   m_TagString: door
@@ -147,3 +148,27 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &-1909956493503031154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3406119974449141695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab6b4d99451f08b40a80d49c3ede2ff3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorPart: {fileID: 0}
+  sideMargin: 0.1
+  extraTop: 6
+  maskLineY: NaN
+  sortingLayerName: 
+  frontSortingOrder: -2147483648
+  backSortingOrder: -2147483648
+  fallbackOrder: -10
+  trimCollider: 1
+  trimLineY: NaN
+  minRemainHeight: 0.02
+  debugLog: 0
