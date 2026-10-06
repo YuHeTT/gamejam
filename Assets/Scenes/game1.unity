@@ -198,10 +198,7 @@ GameObject:
   m_Component:
   - component: {fileID: 87124844}
   - component: {fileID: 87124843}
-<<<<<<< HEAD
-=======
   - component: {fileID: 87124845}
->>>>>>> e21da18c533e18cdf7eaf62223bd8226333ce165
   m_Layer: 3
   m_Name: Square (4)
   m_TagString: Untagged
@@ -1440,10 +1437,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1762506186}
   - component: {fileID: 1762506185}
-<<<<<<< HEAD
-=======
   - component: {fileID: 1762506187}
->>>>>>> e21da18c533e18cdf7eaf62223bd8226333ce165
   m_Layer: 3
   m_Name: Square (3)
   m_TagString: Untagged
