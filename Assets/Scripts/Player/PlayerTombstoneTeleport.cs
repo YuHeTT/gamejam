@@ -22,6 +22,8 @@ public class PlayerTombstoneTeleport : MonoBehaviour
 
     private BoxCollider2D boxCol;
     private Coroutine routine;
+    //本次传送是否只播放"显现"后半段（死亡重生用）
+    private bool pendingEmergeOnly;
 
     private void Awake()
     {
@@ -46,6 +48,25 @@ public class PlayerTombstoneTeleport : MonoBehaviour
         if (player.stateMachine.currentState == player.teleportState)
             return false;
 
+        pendingEmergeOnly = false;
+        player.stateMachine.ChangeState(player.teleportState);
+        return true;
+    }
+
+    /// <summary>死亡重生：立即传送到墓碑位置，只播放"显现"后半段（不做倒下错切）。<br/>
+    /// 与按 W 传送的后半段完全一致。</summary>
+    public bool BeginEmergeOnly()
+    {
+        if (IsTeleporting || player == null)
+            return false;
+
+        if (TombstoneService.Instance == null || !TombstoneService.Instance.HasActiveTombstone)
+            return false;
+
+        if (player.stateMachine.currentState == player.teleportState)
+            return false;
+
+        pendingEmergeOnly = true;
         player.stateMachine.ChangeState(player.teleportState);
         return true;
     }
@@ -57,7 +78,16 @@ public class PlayerTombstoneTeleport : MonoBehaviour
 
         IsTeleporting = true;
         Vector2 feetTarget = TombstoneService.Instance.GetTeleportFeetPosition();
-        routine = StartCoroutine(TeleportRoutine(feetTarget));
+
+        if (pendingEmergeOnly)
+        {
+            pendingEmergeOnly = false;
+            routine = StartCoroutine(EmergeOnlyRoutine(feetTarget));
+        }
+        else
+        {
+            routine = StartCoroutine(TeleportRoutine(feetTarget));
+        }
     }
 
     private IEnumerator TeleportRoutine(Vector2 feetTarget)
@@ -93,6 +123,38 @@ public class PlayerTombstoneTeleport : MonoBehaviour
         shearVisual.SetCollapse(1f);
         shearVisual.SetHidden();
 
+        yield return EmergeSequence(feetTarget, origBodyType, origGravity);
+
+        routine = null;
+        IsTeleporting = false;
+    }
+
+    /// <summary>死亡重生：不播放下错切倒动画，直接以"隐藏"状态出现在墓碑下方并从上往下显现。</summary>
+    private IEnumerator EmergeOnlyRoutine(Vector2 feetTarget)
+    {
+        Rigidbody2D rb = player.rb;
+        RigidbodyType2D origBodyType = rb.bodyType;
+        float origGravity = rb.gravityScale;
+
+        rb.velocity = Vector2.zero;
+        rb.gravityScale = 0f;
+        rb.bodyType = RigidbodyType2D.Kinematic;
+
+        ClearLocomotionAnim();
+        shearVisual.BeginEffectMode();
+        shearVisual.SetHidden();
+
+        yield return EmergeSequence(feetTarget, origBodyType, origGravity);
+
+        routine = null;
+        IsTeleporting = false;
+    }
+
+    /// <summary>传送后半段（与按 W 传送完全一致）：从头往下显现、恢复物理与状态机。两条路径共用。</summary>
+    private IEnumerator EmergeSequence(Vector2 feetTarget, RigidbodyType2D origBodyType, float origGravity)
+    {
+        Rigidbody2D rb = player.rb;
+
         if (boxCol != null)
             boxCol.enabled = false;
         rb.simulated = false;
@@ -122,9 +184,6 @@ public class PlayerTombstoneTeleport : MonoBehaviour
         rb.gravityScale = origGravity != 0f ? origGravity : player.gravityScale;
 
         player.CollisionCheckPublic();
-
-        routine = null;
-        IsTeleporting = false;
 
         if (player.IsGroundDetected())
             player.stateMachine.ChangeState(player.idleState);
