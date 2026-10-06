@@ -195,5 +195,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: "\u84E6"
   icon: {fileID: 0}
-  dropOffset: {x: 0, y: 0}
+  dropOffset: {x: 0, y: -0.8}
   jumpMultiplier: 1.4142
