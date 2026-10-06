@@ -28,7 +28,11 @@ public class Entity : MonoBehaviour
 
     protected virtual void Awake()
     {
-        
+        // 提前解析常用组件：让子类能在 Awake 里安全使用 anim / rb。
+        // 原先只在 Start 里赋值，子类若在 Awake 初始化状态机（Player.Awake → stateMachine.Initialize）
+        // 就会拿到 null 的 anim / rb。Start 里会再解析一次，保持兼容。
+        anim = GetComponentInChildren<Animator>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     protected virtual void Start()

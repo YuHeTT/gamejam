@@ -42,6 +42,12 @@ public class DayNightElevator : MonoBehaviour
         Vector3 p = platform.position;
         p.y = Mathf.MoveTowards(p.y, TargetY, moveSpeed * Time.deltaTime);
         platform.position = p;
+
+        // 与 BalanceElevator 一致：本工程 Physics2D.autoSyncTransforms 是关闭的，
+        // 用 transform.position 平移平台后必须手动同步，否则物理世界里的平台面会落后一帧位移。
+        // 玩家的落地射线越过脚底后只剩约 2.4cm 余量，会因此周期性落空，
+        // 导致"平台移动期间玩家被判为空中、无法跳跃"。
+        Physics2D.SyncTransforms();
     }
 
     /// <summary>确保平台是 Kinematic 刚体，避免物理引擎与脚本抢位置</summary>
