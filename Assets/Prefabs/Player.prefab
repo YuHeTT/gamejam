@@ -252,7 +252,7 @@ MonoBehaviour:
   jumpBuffer: 0.1
   jumpBufferTimer: 0
   dashDuration: 0.5
-  dashSpeed: 25
+  dashSpeed: 15
   dashCoolDown: 0.5
   dashCoolDownTimer: 0
   hasDashedInAir: 0
