@@ -64,6 +64,13 @@ public class Item : MonoBehaviour
 
     public void ExitCarriedState(Player player, Vector2 worldPos)
     {
+        ReturnToWorld(worldPos);
+        OnDrop(player, worldPos);
+    }
+
+    /// <summary>把道具放回世界：恢复物理与渲染并落到指定位置。不触发 OnPickUp / OnDrop。</summary>
+    public void ReturnToWorld(Vector2 worldPos)
+    {
         IsCarried = false;
         Holder    = null;
         if (rb != null)
@@ -77,8 +84,27 @@ public class Item : MonoBehaviour
         }
         transform.position = worldPos;
         SetWorldPresence(true);
-        OnDrop(player, worldPos);
     }
+
+    #region 拾取动画（预览 → 生效）
+    /// <summary>拾取动画开始：立即标记为"已持有"（避免被拾取检测重复命中），但暂不触发 OnPickUp；
+    /// 关闭物理与碰撞、保留图像显示，供玩家"举在头顶"。</summary>
+    public void BeginPickUpPreview(Player player)
+    {
+        IsCarried = true;
+        Holder    = player;
+        if (rb  != null) rb.simulated = false;
+        if (col != null) col.enabled  = false;
+        if (sr  != null) sr.enabled   = true;
+    }
+
+    /// <summary>拾取动画结束：正式生效，触发 OnPickUp（图像转回"持有中"的隐藏状态）</summary>
+    public void CompletePickUp(Player player)
+    {
+        SetWorldPresence(false);
+        OnPickUp(player);
+    }
+    #endregion
 
     // 关闭物理与渲染、但保留 GameObject 激活（保证协程/特效生成仍然可用）
     protected void SetWorldPresence(bool present)

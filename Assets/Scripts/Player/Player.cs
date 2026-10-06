@@ -48,6 +48,8 @@ public class Player : Entity
     public float squashMultiplier = 0.5f;
     public bool isFloating;
     public bool isStuck;
+    [Tooltip("道具拾取动画期间为 true：禁跳（由 PlayerItemController 控制）")]
+    [HideInInspector] public bool isPickingUp;
 
     private BoxCollider2D boxCol;
     private Vector2 origColSize;
@@ -124,8 +126,8 @@ public class Player : Entity
             return;
         }
 
-        //漂浮/卡住期间禁用跳跃
-        if (isFloating || isStuck)
+        //漂浮/卡住/拾取动画期间禁用跳跃
+        if (isFloating || isStuck || isPickingUp)
         {
             jumpBufferTimer = 0;
             return;
