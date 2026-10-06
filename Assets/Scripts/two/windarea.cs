@@ -6,7 +6,8 @@ using UnityEngine;
 /// 风扇风区：进入触发器范围的玩家会受到持续向上的风场，被托着上升。<br/>
 /// 作用方式：FixedUpdate 里给玩家刚体施加向上的力（AddForce），并把上升速度限制在 windSpeed 内，
 /// 因此风是"托举"而不是"瞬移"；离开风区后交给重力自然下坠。<br/>
-/// 风口随昼夜开闭：白天开启（吹风 + 粒子），黑夜关闭（不吹风、不再发射粒子）。
+/// 风口随昼夜开闭：白天开启（吹风 + 粒子），黑夜关闭（不吹风、不再发射粒子）。<br/>
+/// 勾选 usePeriodicCycle 后忽略昼夜，改为按周期自动开 n 秒、关 m 秒（粒子同步）。
 /// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class windarea : MonoBehaviour
@@ -28,6 +29,14 @@ public class windarea : MonoBehaviour
     [Tooltip("勾选后粒子发射框会自动匹配本物体 Collider2D 的尺寸")]
     public bool syncParticlesWithTrigger = true;
 
+    [Header("周期开关（可选）")]
+    [Tooltip("勾选后忽略昼夜，按固定周期自动开/关风口（粒子同步）")]
+    public bool usePeriodicCycle = false;
+    [Tooltip("周期模式：每次开启持续 n 秒")]
+    public float openDuration = 3f;
+    [Tooltip("周期模式：每次关闭持续 m 秒")]
+    public float closedDuration = 3f;
+
     // 需要施加风力的刚体（用列表兼容同时有多个物体进入）
     private readonly List<Rigidbody2D> _targets = new List<Rigidbody2D>();
 
@@ -42,6 +51,11 @@ public class windarea : MonoBehaviour
 
     // 风口是否开启：白天开启，黑夜关闭
     private bool _ventOpen = true;
+
+    // 周期开关模式
+    private bool _periodicActive;           // 当前是否处于周期模式
+    private bool _cycleOpenPhase = true;    // 周期模式下当前阶段（true = 开启中）
+    private float _cycleTimer;              // 当前阶段已持续时间
 
     private void Awake()
     {
@@ -62,7 +76,9 @@ public class windarea : MonoBehaviour
     {
         //昼夜切换时立即更新风口状态
         TimeOfDayManager.OnTimeChanged += HandleTimeChanged;
-        ApplyVentState(TimeOfDayManager.IsNight);
+
+        _periodicActive = !usePeriodicCycle;   //先置反，保证 ApplyMode 一定执行一次
+        ApplyMode(usePeriodicCycle);
     }
 
     private void OnDisable()
@@ -75,10 +91,62 @@ public class windarea : MonoBehaviour
         ApplyVentState(isNight);
     }
 
-    /// <summary>白天风口开启（吹风 + 粒子），黑夜风口关闭（不吹风 + 停止发射粒子）</summary>
+    private void Update()
+    {
+        //运行时切换开关也能立即生效
+        if (usePeriodicCycle != _periodicActive)
+            ApplyMode(usePeriodicCycle);
+
+        if (usePeriodicCycle)
+            TickPeriodicCycle();
+    }
+
+    /// <summary>切换/初始化风口驱动方式：周期模式 or 昼夜模式</summary>
+    private void ApplyMode(bool periodic)
+    {
+        _periodicActive = periodic;
+
+        if (periodic)
+        {
+            //周期模式：从"开启"阶段开始计时
+            _cycleOpenPhase = true;
+            _cycleTimer = 0f;
+            SetVentOpen(true);
+        }
+        else
+        {
+            //非周期模式：回到原来的昼夜行为
+            ApplyVentState(TimeOfDayManager.IsNight);
+        }
+    }
+
+    /// <summary>周期计时：开 openDuration 秒 → 关 closedDuration 秒 → 如此循环</summary>
+    private void TickPeriodicCycle()
+    {
+        float phaseLength = _cycleOpenPhase
+            ? Mathf.Max(0.01f, openDuration)
+            : Mathf.Max(0.01f, closedDuration);
+
+        _cycleTimer += Time.deltaTime;
+        if (_cycleTimer < phaseLength) return;
+
+        _cycleTimer = 0f;
+        _cycleOpenPhase = !_cycleOpenPhase;
+        SetVentOpen(_cycleOpenPhase);
+    }
+
+    /// <summary>白天风口开启（吹风 + 粒子），黑夜风口关闭（不吹风 + 停止发射粒子）。周期模式下由周期计时接管。</summary>
     private void ApplyVentState(bool isNight)
     {
-        _ventOpen = !isNight;
+        if (usePeriodicCycle) return;   //周期模式接管风口开关
+
+        SetVentOpen(!isNight);
+    }
+
+    /// <summary>设置风口开/关，并同步粒子特效</summary>
+    private void SetVentOpen(bool open)
+    {
+        _ventOpen = open;
 
         if (windParticles == null) return;
 

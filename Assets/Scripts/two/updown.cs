@@ -4,7 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// 升降梯：与 <see cref="doorwithtrigger"/> 原理相同、触发条件相反——<br/>
-/// 玩家踩上 triggerfloors 时降下来（closedPosition），离开后升上去（openedPosition）。<br/><br/>
+/// 玩家踩上 triggerfloors 时降下来（closedPosition），离开后升上去（openedPosition）。<br/>
+/// 勾选 useLoopMode 后无视触发机关：自动在两端之间循环往复，并在每端停留 loopEndPause 秒。<br/><br/>
 /// 新增机制：下降途中压到箱子（标签 box）时，箱子会**随着下降逐渐压扁**——
 /// 压扁进度由升降梯压入箱子的深度决定，升降梯是匀速下降的，
 /// 所以压扁推进速度天然与下降速度相关（想更快就调小 squashHeight）。<br/>
@@ -21,6 +22,12 @@ public class updown : MonoBehaviour
     [Header("运动参数")]
     public float moveDistance = 5f;
     public float moveSpeed = 12f;
+
+    [Header("循环模式（可选）")]
+    [Tooltip("勾选后无视触发机关，自动在两个端点之间循环往复移动")]
+    public bool useLoopMode = false;
+    [Tooltip("循环模式下到达任意一端后的停留时间（秒）")]
+    public float loopEndPause = 1f;
 
     [Header("压扁箱子")]
     [Tooltip("压扁后的横向倍率（长 ×2）")]
@@ -78,6 +85,11 @@ public class updown : MonoBehaviour
     private bool _descending;        // 目标在下方（打算下降）
     private bool _pressingDown;      // 正在向下压（含被箱子顶住、实际位移为 0 的情况）
 
+    // 循环模式：是否朝 openedPosition 走
+    private bool _loopGoingUp = true;
+    // 循环模式：端点停留剩余时间
+    private float _loopPauseTimer;
+
     private void Awake()
     {
         _elevatorCollider = GetComponent<Collider2D>();
@@ -114,21 +126,29 @@ public class updown : MonoBehaviour
 
     private void Update()
     {
-        // 1) 触发判定（与门相反：踩上去才降）
-        canOpen = true;
-        for (int i = 0; i < triggerfloors.Length; i++)
+        if (useLoopMode)
         {
-            if (triggerfloors[i] != null && triggerfloors[i].isPlayerOnFloor)
-            {
-                canOpen = false;
-                break;
-            }
+            // 1a) 循环模式：无视触发机关，自动往复（端点停留 loopEndPause 秒）
+            UpdateLoopTarget();
         }
-
-        if (canOpen)
-            targetPosition = openedPosition;
         else
-            targetPosition = closedPosition;
+        {
+            // 1b) 触发判定（与门相反：踩上去才降）
+            canOpen = true;
+            for (int i = 0; i < triggerfloors.Length; i++)
+            {
+                if (triggerfloors[i] != null && triggerfloors[i].isPlayerOnFloor)
+                {
+                    canOpen = false;
+                    break;
+                }
+            }
+
+            if (canOpen)
+                targetPosition = openedPosition;
+            else
+                targetPosition = closedPosition;
+        }
 
         // 2) 本帧想往哪走（先算出来，压扁推进要用它判断"是否在往下压"）
         Vector3 next = Vector3.MoveTowards(
@@ -164,6 +184,28 @@ public class updown : MonoBehaviour
                 clamped.y = _descentLimitY;
                 transform.position = clamped;
             }
+        }
+    }
+
+    /// <summary>
+    /// 循环模式：在 closedPosition / openedPosition 两端之间往复。<br/>
+    /// 到达任意一端后停留 loopEndPause 秒再折返；停留期间保持停在端点不动。
+    /// </summary>
+    private void UpdateLoopTarget()
+    {
+        if (_loopPauseTimer > 0f)
+        {
+            _loopPauseTimer -= Time.deltaTime;
+            return;     //停留中：保持刚到达的那一端
+        }
+
+        targetPosition = _loopGoingUp ? openedPosition : closedPosition;
+
+        //到达端点 → 开始停留，并记录下一段的方向
+        if (Vector3.Distance(transform.position, targetPosition) <= 0.001f)
+        {
+            _loopPauseTimer = Mathf.Max(0f, loopEndPause);
+            _loopGoingUp = !_loopGoingUp;
         }
     }
 
@@ -244,11 +286,27 @@ public class updown : MonoBehaviour
 
         // 只有"完全压扁"之后才需要给升降梯限位，让它停在压扁的箱子顶面上。
         // ratio<1 期间不限位，否则压扁无法继续推进。
-        if (handle.ratio >= 1f)
+        // 限位前提：箱子仍在升降梯正下方——箱子被挤开/移走后就不能再挡着，
+        // 否则升降梯会永远停在压扁时的高度，回不到最底部（closedPosition）。
+        if (handle.ratio >= 1f && IsUnderElevator(box))
         {
             float currentTop = box.bounds.max.y;
             if (currentTop > limitY) limitY = currentTop;
         }
+    }
+
+    /// <summary>
+    /// 箱子是否仍在升降梯正下方（水平方向有重叠）。<br/>
+    /// 箱子被移出升降梯下方后不再限位，升降梯才能继续下压到原本的最底部。
+    /// </summary>
+    private bool IsUnderElevator(BoxCollider2D box)
+    {
+        if (box == null || _elevatorCollider == null) return false;
+
+        Bounds elevator = _elevatorCollider.bounds;
+        Bounds boxBounds = box.bounds;
+
+        return boxBounds.min.x < elevator.max.x && boxBounds.max.x > elevator.min.x;
     }
 
     /// <summary>按 handle.ratio 更新箱子的缩放与位置（底边固定）</summary>
