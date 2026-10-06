@@ -5,7 +5,8 @@ using UnityEngine;
 /// <summary>
 /// 风扇风区：进入触发器范围的玩家会受到持续向上的风场，被托着上升。<br/>
 /// 作用方式：FixedUpdate 里给玩家刚体施加向上的力（AddForce），并把上升速度限制在 windSpeed 内，
-/// 因此风是"托举"而不是"瞬移"；离开风区后交给重力自然下坠。
+/// 因此风是"托举"而不是"瞬移"；离开风区后交给重力自然下坠。<br/>
+/// 风口随昼夜开闭：白天开启（吹风 + 粒子），黑夜关闭（不吹风、不再发射粒子）。
 /// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class windarea : MonoBehaviour
@@ -21,15 +22,11 @@ public class windarea : MonoBehaviour
     public bool onlyAffectPlayer = true;
     [Tooltip("要求玩家处于漂浮状态(isFloating)才生效：没拿「幕」道具时站在风区里不会被吹起")]
     public bool requireFloating = true;
-    [Tooltip("（已废弃，保留仅为兼容旧预制体）粒子始终发射，不再随玩家状态开关")]
-    public bool stopParticlesWhenInactive = false;
 
     [Header("粒子特效（可留空：运行时会自动在自身和子物体里查找）")]
     public ParticleSystem windParticles;
     [Tooltip("勾选后粒子发射框会自动匹配本物体 Collider2D 的尺寸")]
     public bool syncParticlesWithTrigger = true;
-    [Tooltip("粒子是否始终发射。true = 无论有没有玩家、有没有满足漂浮条件，风柱都一直可见")]
-    public bool particlesAlwaysOn = true;
 
     // 需要施加风力的刚体（用列表兼容同时有多个物体进入）
     private readonly List<Rigidbody2D> _targets = new List<Rigidbody2D>();
@@ -42,6 +39,9 @@ public class windarea : MonoBehaviour
     private readonly List<Collider2D> _bodyColliders = new List<Collider2D>();
 
     private Collider2D _zone;
+
+    // 风口是否开启：白天开启，黑夜关闭
+    private bool _ventOpen = true;
 
     private void Awake()
     {
@@ -56,14 +56,41 @@ public class windarea : MonoBehaviour
             windParticles = GetComponentInChildren<ParticleSystem>();
 
         ApplyParticleShape();
+    }
 
-        // 粒子始终播放：它是风扇的"常驻外观"，不随玩家是否漂浮、是否在风区内开关
-        if (particlesAlwaysOn && windParticles != null)
-            windParticles.Play();
+    private void OnEnable()
+    {
+        //昼夜切换时立即更新风口状态
+        TimeOfDayManager.OnTimeChanged += HandleTimeChanged;
+        ApplyVentState(TimeOfDayManager.IsNight);
+    }
+
+    private void OnDisable()
+    {
+        TimeOfDayManager.OnTimeChanged -= HandleTimeChanged;
+    }
+
+    private void HandleTimeChanged(bool isNight)
+    {
+        ApplyVentState(isNight);
+    }
+
+    /// <summary>白天风口开启（吹风 + 粒子），黑夜风口关闭（不吹风 + 停止发射粒子）</summary>
+    private void ApplyVentState(bool isNight)
+    {
+        _ventOpen = !isNight;
+
+        if (windParticles == null) return;
+
+        if (_ventOpen) windParticles.Play();
+        else           windParticles.Stop();
     }
 
     private void FixedUpdate()
     {
+        //黑夜风口关闭：不施加任何风（漂浮状态也没用）
+        if (!_ventOpen) return;
+
         // 倒序遍历，便于安全移除已离开或已销毁的对象
         for (int i = _targets.Count - 1; i >= 0; i--)
         {
