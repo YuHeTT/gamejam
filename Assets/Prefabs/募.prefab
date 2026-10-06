@@ -50,7 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: "\u52DF"
   icon: {fileID: 0}
-  dropOffset: {x: 0, y: 0}
+  dropOffset: {x: 0, y: -0.8}
 --- !u!212 &1518387485528270092
 SpriteRenderer:
   m_ObjectHideFlags: 0

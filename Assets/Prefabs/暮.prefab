@@ -102,7 +102,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: "\u672A\u547D\u540D\u9053\u5177"
   icon: {fileID: 0}
-  dropOffset: {x: 0, y: 0}
+  dropOffset: {x: 0, y: -0.8}
 --- !u!50 &2248526218323469066
 Rigidbody2D:
   serializedVersion: 4
