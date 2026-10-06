@@ -76,13 +76,22 @@ public class Player : Entity
 
         if (GetComponent<PlayerGraveTeleportController>() == null)
             gameObject.AddComponent<PlayerGraveTeleportController>();
+
+        // 关键：在 Awake 里就把状态机初始化好，而不是等到 Start。
+        // 这样 currentState 从第一帧起就非空，Player.Update() 不可能再碰到
+        // "stateMachine.currentState 为 null" 的 NullReferenceException（Player.cs:101）。
+        // Entity.Awake() 已提前解析好 anim / rb，所以这里调用各状态的 Enter() 是安全的。
+        stateMachine.Initialize(idleState);
     }
 
     protected override void Start()
     {
         base.Start();
         rb.gravityScale = gravityScale;
-        stateMachine.Initialize(idleState);
+
+        // 状态机已在 Awake 初始化，这里只做兜底（正常情况下不会走到）
+        if (stateMachine.currentState == null)
+            stateMachine.Initialize(idleState);
 
         //缓存原始尺寸，供压扁/恢复使用
         boxCol = GetComponent<BoxCollider2D>();
@@ -98,7 +107,9 @@ public class Player : Entity
         base.Update();
         CheckJumpInput();
         UpdateDashCooldown();
-        stateMachine.currentState.Update();
+        // 守卫：即使初始化时序出现意外，也不至于每帧抛 NullReferenceException 刷屏
+        if (stateMachine != null && stateMachine.currentState != null)
+            stateMachine.currentState.Update();
 
         if (IsTeleporting)
             return;
@@ -112,7 +123,11 @@ public class Player : Entity
         }
     }
 
-    public void AnimationTrigger() => stateMachine.currentState.AnimationFinishTrigger();
+    public void AnimationTrigger()
+    {
+        if (stateMachine != null && stateMachine.currentState != null)
+            stateMachine.currentState.AnimationFinishTrigger();
+    }
 
     #region 跳跃输入检测
     private void CheckJumpInput()

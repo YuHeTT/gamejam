@@ -26,10 +26,14 @@ public class doorwithtrigger : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        canOpen = true;
+        // 空数组 / 空元素都要当成"没有踏板被踩"（门保持关闭），否则会每帧抛 NullReferenceException。
+        // 场景里确实存在这种情况：预制体 triggerfloors 的默认值是"长度 1、元素为 null"，
+        // 若某个门实例没有做数组覆盖（例如 game6 的 door_floor），就会直接踩中。
+        // 与 updown.cs 的处理保持一致（那边一直有 triggerfloors[i] != null 的判空）。
+        canOpen = triggerfloors != null && triggerfloors.Length > 0;
         for(int i = 0; i < triggerfloors.Length; i++)
         {
-            if ( !triggerfloors[i].isPlayerOnFloor)
+            if (triggerfloors[i] == null || !triggerfloors[i].isPlayerOnFloor)
             {
                 canOpen = false;
                 break;
