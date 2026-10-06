@@ -273,7 +273,7 @@ MonoBehaviour:
   bgm: {fileID: 842528935}
   shot: {fileID: 1721783122}
   bgmclips:
-  - {fileID: 8300000, guid: 3063cda0ad43de841bfde50f48858b44, type: 3}
+  - {fileID: 8300000, guid: 0ab9b24fd51ca194395bcf5ef987d257, type: 3}
   shotclips:
   - {fileID: 8300000, guid: 09fc8f09327330e44b79bb66932ea8d5, type: 3}
   - {fileID: 8300000, guid: e2d152340718ab24ca6cd469efc31cd0, type: 3}
@@ -499,6 +499,7 @@ MonoBehaviour:
   squashMultiplier: 0.5
   isFloating: 0
   isStuck: 0
+  isPickingUp: 0
 --- !u!4 &541815881
 Transform:
   m_ObjectHideFlags: 0
@@ -508,7 +509,7 @@ Transform:
   m_GameObject: {fileID: 541815879}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 21, y: 16.5, z: 0}
+  m_LocalPosition: {x: 26.78, y: 10.8, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -609,6 +610,19 @@ MonoBehaviour:
     m_Bits: 256
   pickUpCooldown: 0.15
   pickUpKey: 106
+  pickUpAnimDuration: 1.2
+  stretchTime: 0.05
+  squashTime: 0.1
+  returnTime: 0.1
+  stretchScaleX: 0.49
+  stretchScaleY: 1.69
+  squashScaleX: 1.55
+  squashScaleY: 0.62
+  holdHeight: 1.2
+  holdOffset: {x: -0.45, y: 0.27}
+  previewSortingOrder: 20
+  pickUpParamName: PickUp
+  pickUpStateName: playerPickUp
 --- !u!1 &611364175
 GameObject:
   m_ObjectHideFlags: 0
@@ -52122,6 +52136,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: canTriggerPedal
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: canWeighOnBalance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: placementOffset.y
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 8522119880287629884, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: m_LocalPosition.x
       value: 8.650105
@@ -52181,11 +52207,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4433526915086945435, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.01
+      value: 10.11
       objectReference: {fileID: 0}
     - target: {fileID: 4433526915086945435, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.85
+      value: 3.05
       objectReference: {fileID: 0}
     - target: {fileID: 4433526915086945435, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
       propertyPath: m_LocalPosition.z
