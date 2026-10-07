@@ -199,6 +199,7 @@ MonoBehaviour:
     idle: {fileID: 7400000, guid: 7034a94c0930b2443a0c539d87bd02d7, type: 2}
     move: {fileID: 7400000, guid: 57edceac68a44154a9ec54aac96409b0, type: 2}
     jump: {fileID: 7400000, guid: 9a817b9e85ee4ad45870f2576d0b4ed6, type: 2}
+    dash: {fileID: 7400000, guid: d1fc831c6f1cab54cab514ce5bdcb1d6, type: 2}
   dropOffset: {x: 0, y: -0.8}
   canTriggerPedal: 0
   canWeighOnBalance: 0

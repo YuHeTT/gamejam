@@ -37,7 +37,7 @@ public class PlayerAnimationSet : MonoBehaviour
         // 不依赖 Player.anim 的解析时序：直接从子物体取 Animator，并缓存序列化进来的默认控制器
         anim = GetComponentInChildren<Animator>();
         if (anim != null)
-            defaultController = anim.runtimeAnimatorController;
+            defaultController = UnwrapController(anim.runtimeAnimatorController);
 
         ResolveRefs();
     }
@@ -116,6 +116,18 @@ public class PlayerAnimationSet : MonoBehaviour
         overrideBuffer.Clear();
         ovc.GetOverrides(overrideBuffer);
 
+        // 部分情况下 GetOverrides 会是空的，改用控制器上的全部原始片段
+        if (overrideBuffer.Count == 0 && defaultController != null)
+        {
+            AnimationClip[] originals = defaultController.animationClips;
+            for (int i = 0; i < originals.Length; i++)
+            {
+                AnimationClip original = originals[i];
+                if (original != null)
+                    overrideBuffer.Add(new KeyValuePair<AnimationClip, AnimationClip>(original, original));
+            }
+        }
+
         bool anyApplied = false;
 
         for (int i = 0; i < overrideBuffer.Count; i++)
@@ -127,6 +139,7 @@ public class PlayerAnimationSet : MonoBehaviour
             if (replacement == null) continue;   // 该槽位没填 → 保持原动画
 
             overrideBuffer[i] = new KeyValuePair<AnimationClip, AnimationClip>(original, replacement);
+            ovc[original] = replacement;
             anyApplied = true;
         }
 
@@ -179,12 +192,20 @@ public class PlayerAnimationSet : MonoBehaviour
 
         a.runtimeAnimatorController = controller;
 
-        // 换控制器会重置 Animator 参数并回到默认状态：按当前状态重新置位，避免动画掉回静止
+        // 换控制器会重置 Animator 参数并回到默认状态：按当前状态重新置位并立刻切到对应状态
         if (player != null && player.stateMachine != null && player.stateMachine.currentState != null)
         {
             string boolName = player.stateMachine.currentState.AnimBoolName;
             if (!string.IsNullOrEmpty(boolName))
+            {
+                a.SetBool("Idle", false);
+                a.SetBool("Move", false);
+                a.SetBool("Jump", false);
+                a.SetBool("Dash", false);
+                a.SetBool("PickUp", false);
                 a.SetBool(boolName, true);
+                a.Play(StateNameForBool(boolName), 0, 0f);
+            }
         }
         if (player != null && player.rb != null)
             a.SetFloat("yVelocity", player.rb.velocity.y);
@@ -211,5 +232,24 @@ public class PlayerAnimationSet : MonoBehaviour
     {
         if (player == null) player = GetComponentInParent<Player>();
         if (itemController == null) itemController = GetComponentInParent<PlayerItemController>();
+    }
+
+    private static RuntimeAnimatorController UnwrapController(RuntimeAnimatorController controller)
+    {
+        while (controller is AnimatorOverrideController nested && nested.runtimeAnimatorController != null)
+            controller = nested.runtimeAnimatorController;
+        return controller;
+    }
+
+    private static string StateNameForBool(string boolName)
+    {
+        switch (boolName)
+        {
+            case "Move": return "playerMove";
+            case "Jump": return "Jump/Fall";
+            case "Dash": return "playerDash";
+            case "PickUp": return "playerPickUp";
+            default: return "playerIdle";
+        }
     }
 }
