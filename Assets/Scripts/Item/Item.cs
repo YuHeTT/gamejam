@@ -1,4 +1,19 @@
+using System;
 using UnityEngine;
+
+/// <summary>一套角色动画槽位（静止/移动/跳跃）。由道具提供，运行时自动套用到角色的 Animator 上。</summary>
+[Serializable]
+public class ItemAnimationSet
+{
+    [Tooltip("静止动画")]
+    public AnimationClip idle;
+    [Tooltip("移动动画")]
+    public AnimationClip move;
+    [Tooltip("跳跃动画（跳跃状态是 yVelocity 混合树，上升与下落共用这一段）")]
+    public AnimationClip jump;
+    [Tooltip("冲刺动画（仅「蓦」这类有冲刺能力的道具需要填；留空沿用默认）")]
+    public AnimationClip dash;
+}
 
 /// <summary>世界中的道具：可被拾取的物理物体，同时承载该道具的能力逻辑。<br/>
 /// 组件 Rigidbody2D、Collider2D、SpriteRenderer 需与本脚本挂在同一个 GameObject 上。</summary>
@@ -7,6 +22,10 @@ public class Item : MonoBehaviour
     [Header("ItemInfo")]
     public string itemName = "未命名道具";
     public Sprite icon;                       // 预留：UI 用，暂不接入
+
+    [Header("动画组（持有本道具时替换）")]
+    [Tooltip("给这个道具拖入对应的 静止/移动/跳跃 动画；留空的那一项沿用角色的默认动画")]
+    public ItemAnimationSet animationClips = new ItemAnimationSet();
 
     [Header("DropInfo")]
     public Vector2 dropOffset = Vector2.zero; // 从玩家身上放回世界时的偏移
