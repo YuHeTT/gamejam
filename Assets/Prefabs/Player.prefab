@@ -242,6 +242,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDeviate: 0.4
+  minGroundNormalY: 0.65
   facingDir: 1
   facingRight: 1
   maxFallSpeed: 25

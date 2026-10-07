@@ -13,12 +13,17 @@ public class Entity : MonoBehaviour
     protected bool centerCheck;
     protected bool leftCheck;
     protected bool rightCheck;
+    private readonly ContactPoint2D[] groundContacts = new ContactPoint2D[16];
+    private Collider2D bodyCollider;
     [Space]
     [Tooltip("地面所在层的名称。代码按名称解析，避免层未命名时掩码被清成 0。")]
     [SerializeField] protected string groundLayerName = "Ground";
     [Tooltip("备用掩码，仅当上面的层名称不存在时才会用到。")]
     [SerializeField] protected LayerMask whatIsGround;
     [SerializeField] protected float groundCheckDeviate = 0.36f;
+    [Tooltip("允许被视为地面的最小接触法线 Y 分量。1 是水平地面，0 是垂直墙。")]
+    [Range(0f, 1f)]
+    [SerializeField] protected float minGroundNormalY = 0.65f;
     public int facingDir = 1;
     public bool facingRight = true;
     public float maxFallSpeed = 25f;
@@ -33,12 +38,14 @@ public class Entity : MonoBehaviour
         // 就会拿到 null 的 anim / rb。Start 里会再解析一次，保持兼容。
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        bodyCollider = GetComponent<Collider2D>();
     }
 
     protected virtual void Start()
     {
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        bodyCollider = GetComponent<Collider2D>();
 
         ResolveGroundMask();
 
@@ -108,9 +115,54 @@ public class Entity : MonoBehaviour
     protected virtual void CollisionCheck()
     {
         Vector2 pos = groundCheck.position;
-        centerCheck = Physics2D.Raycast(pos, Vector2.down, groundCheckDistance, groundMask);
-        leftCheck = Physics2D.Raycast(pos + Vector2.left * groundCheckDeviate, Vector2.down, groundCheckDistance, groundMask);
-        rightCheck = Physics2D.Raycast(pos + Vector2.right * groundCheckDeviate, Vector2.down, groundCheckDistance, groundMask);
+        bool hasWalkableContact = HasWalkableGroundContact();
+        centerCheck = hasWalkableContact || IsWalkableGroundAt(pos);
+        leftCheck = hasWalkableContact || IsWalkableGroundAt(pos + Vector2.left * groundCheckDeviate);
+        rightCheck = hasWalkableContact || IsWalkableGroundAt(pos + Vector2.right * groundCheckDeviate);
+    }
+
+    /// <summary>
+    /// 只接受脚底下方的可站立表面。Raycast 从 Collider 内开始时可能返回 fraction=0，
+    /// 因此不能只判断“是否命中”；通过法线 Y 过滤掉墙面/侧面接触。
+    /// </summary>
+    private bool IsWalkableGroundAt(Vector2 origin)
+    {
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, groundCheckDistance, groundMask);
+        if (hit.collider == null || hit.normal.y < minGroundNormalY)
+            return false;
+
+        // queriesStartInColliders 开启时，从墙体内部发出的射线会得到 fraction=0。
+        // Unity 可能为这种内部命中返回合成的向上法线，所以零距离命中必须直接拒绝。
+        if (hit.fraction <= 0.0001f)
+            return false;
+
+        return true;
+    }
+
+    private bool HasWalkableGroundContact()
+    {
+        if (rb == null)
+            return false;
+
+        float feetY = bodyCollider != null
+            ? bodyCollider.bounds.min.y
+            : groundCheck.position.y;
+
+        int contactCount = rb.GetContacts(groundContacts);
+        for (int i = 0; i < contactCount; i++)
+        {
+            ContactPoint2D contact = groundContacts[i];
+            if (contact.collider == null)
+                continue;
+
+            int layerBit = 1 << contact.collider.gameObject.layer;
+            // 墙面/侧面接触点通常位于身体中部；只接受脚底附近的向上接触。
+            bool atFeet = contact.point.y <= feetY + 0.08f;
+            if ((groundMask & layerBit) != 0 && atFeet && contact.normal.y >= minGroundNormalY)
+                return true;
+        }
+
+        return false;
     }
     public virtual bool IsGroundDetected() => centerCheck || leftCheck || rightCheck;
 
