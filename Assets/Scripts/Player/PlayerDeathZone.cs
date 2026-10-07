@@ -1,7 +1,9 @@
 using UnityEngine;
+using UnityEngine.Video;
 
 /// <summary>玩家死亡判定区：把本组件挂在一个带长方形 BoxCollider2D（勾选 Is Trigger）的空物体上。<br/>
 /// 玩家碰到判定框即判定死亡：<br/>
+/// - 勾选 playVideoOnDeath → 全屏播放指定视频，至少播放 minVideoTime 秒后可按任意键退出，随后正常重启场景；<br/>
 /// - 场上已有墓碑 → 立刻传送到墓碑并播放显现动画（与墓碑传送后半段一致）；<br/>
 /// - 否则 → 屏幕从上往下拉黑 → 全黑期间还原到初始场景状态 → 从上往下显现画面。<br/>
 /// 判定框本身不参与物理，只做重叠检测（玩家带 Dynamic 刚体，触发回调可用）。</summary>
@@ -14,6 +16,14 @@ public class PlayerDeathZone : MonoBehaviour
 
     [Tooltip("关闭后本判定区不再造成死亡")]
     public bool active = true;
+
+    [Header("特殊：死亡改为全屏播放视频")]
+    [Tooltip("勾选后本判定区死亡时不重来，改为全屏播放下方视频；视频播完/按键退出后正常重启场景")]
+    public bool playVideoOnDeath = false;
+    [Tooltip("死亡时全屏播放的视频（需勾选 playVideoOnDeath）")]
+    public VideoClip deathVideo;
+    [Tooltip("视频至少播放多少秒后才允许按键退出（默认 3 秒）")]
+    public float minVideoTime = 3f;
 
     private void Reset()
     {
@@ -42,6 +52,6 @@ public class PlayerDeathZone : MonoBehaviour
         Player player = other.GetComponentInParent<Player>();
         if (player == null) return;
 
-        PlayerDeathManager.Instance.TriggerDeath(player);
+        PlayerDeathManager.Instance.TriggerDeath(player, this);
     }
 }

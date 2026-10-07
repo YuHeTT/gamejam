@@ -2,12 +2,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
-/// <summary>玩家死亡调度（全局单例，DontDestroyOnLoad，自行创建全屏黑色遮罩）。<br/>
+/// <summary>玩家死亡调度（全局单例，DontDestroyOnLoad，自行创建全屏黑色遮罩与视频层）。<br/>
 /// 由 <see cref="PlayerDeathZone"/> 触碰到玩家时调用 <see cref="TriggerDeath"/>：<br/>
+/// - 该判定区勾选了 playVideoOnDeath → 全屏播放视频，至少播放 minVideoTime 秒后可按任意键退出，随后正常重启场景；<br/>
 /// - 场上已有墓碑 → 立刻传送到墓碑并播放显现动画（与墓碑传送后半段完全一致）；<br/>
 /// - 否则 → 从上往下拉黑 → 全黑期间还原到初始场景状态（重载当前场景）→ 全黑持续 holdDuration 秒 → 从上往下显现画面。<br/>
-/// 遮罩挂在 DontDestroyOnLoad 的根物体上，因此重载场景后仍能保持全黑并继续显现。</summary>
+/// 遮罩/视频层挂在 DontDestroyOnLoad 的根物体上，因此重载场景后仍能继续工作。</summary>
 [DisallowMultipleComponent]
 public class PlayerDeathManager : MonoBehaviour
 {
@@ -45,6 +47,11 @@ public class PlayerDeathManager : MonoBehaviour
     //遮罩超出屏幕的余量（像素），避免边缘缝隙
     private const float CoverMargin = 4f;
 
+    //全屏视频层（特殊死亡时使用）
+    private RawImage videoImage;
+    private VideoPlayer videoPlayer;
+    private RenderTexture videoRT;
+
     private bool running;
 
     private void Awake()
@@ -60,10 +67,23 @@ public class PlayerDeathManager : MonoBehaviour
         BuildOverlay();
     }
 
-    /// <summary>判定死亡。有墓碑则传送重生，否则黑屏并还原场景。</summary>
-    public void TriggerDeath(Player player)
+    private void OnDestroy()
     {
-        if (player == null) return;
+        if (_instance == this) _instance = null;
+        ReleaseVideoTexture();
+    }
+
+    /// <summary>判定死亡。特殊判定区播视频，有墓碑则传送重生，否则黑屏并还原场景。</summary>
+    public void TriggerDeath(Player player, PlayerDeathZone zone = null)
+    {
+        if (player == null || running) return;
+
+        //特殊判定区：全屏播视频，退出后正常重启场景（优先于墓碑重生）
+        if (zone != null && zone.playVideoOnDeath && zone.deathVideo != null)
+        {
+            StartCoroutine(VideoDeathRoutine(zone));
+            return;
+        }
 
         //场上已有墓碑：不走拉黑重置，直接传送并播放显现后半段
         if (TombstoneService.Instance != null && TombstoneService.Instance.HasActiveTombstone)
@@ -73,7 +93,6 @@ public class PlayerDeathManager : MonoBehaviour
             return;
         }
 
-        if (running) return;
         StartCoroutine(DeathRoutine());
     }
 
@@ -87,6 +106,72 @@ public class PlayerDeathManager : MonoBehaviour
         yield return RevealFromBlack();   //从上往下显现画面
 
         running = false;
+    }
+
+    /// <summary>特殊死亡：全屏播放视频。至少播放 zone.minVideoTime 秒后可按任意键退出；视频播完自动退出。退出后正常重启场景。</summary>
+    private IEnumerator VideoDeathRoutine(PlayerDeathZone zone)
+    {
+        running = true;
+
+        //先用黑屏挡住游戏画面（视频层在黑色遮罩之上，因此视频仍会显示在最前）
+        SetCoverY(0f);
+
+        EnsureVideoTexture();
+        videoImage.texture        = videoRT;
+        videoPlayer.targetTexture = videoRT;
+        videoPlayer.clip          = zone.deathVideo;
+
+        videoImage.gameObject.SetActive(true);
+        videoPlayer.Play();
+
+        float elapsed = 0f;
+        bool started = false;
+        float minTime = Mathf.Max(0f, zone.minVideoTime);
+        while (true)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            if (videoPlayer.isPlaying) started = true;
+
+            //视频播放结束 → 退出
+            if (started && !videoPlayer.isPlaying) break;
+            //已播放满 minTime 秒后，任意键退出
+            if (elapsed >= minTime && Input.anyKeyDown) break;
+            //兜底：视频始终未开始（格式/平台不支持等），避免卡死
+            if (!started && elapsed > 10f)
+            {
+                Debug.LogWarning("PlayerDeathManager: 死亡视频未能开始播放（可能格式或平台不支持），直接进入复活流程。", this);
+                break;
+            }
+
+            yield return null;
+        }
+
+        videoPlayer.Stop();
+        videoImage.gameObject.SetActive(false);
+        SetCoverY(Screen.height + CoverMargin);   //收起黑屏
+
+        ReloadScene();     //正常复活：场景重启
+        running = false;
+    }
+
+    private void EnsureVideoTexture()
+    {
+        int w = Mathf.Max(2, Screen.width);
+        int h = Mathf.Max(2, Screen.height);
+        if (videoRT != null && (videoRT.width != w || videoRT.height != h))
+        {
+            videoRT.Release();
+            videoRT = null;
+        }
+        if (videoRT == null)
+            videoRT = new RenderTexture(w, h, 0);
+    }
+
+    private void ReleaseVideoTexture()
+    {
+        if (videoRT == null) return;
+        videoRT.Release();
+        videoRT = null;
     }
 
     #region 遮罩
@@ -114,6 +199,28 @@ public class PlayerDeathManager : MonoBehaviour
 
         RefreshCoverSize();
         SetCoverY(Screen.height + CoverMargin);   //初始收在屏幕上方，不可见
+
+        //全屏视频层：默认隐藏，特殊死亡时才显示（在黑色遮罩之后创建，渲染更靠前）
+        GameObject videoGO = new GameObject("DeathVideoImage");
+        videoGO.transform.SetParent(canvasGO.transform, false);
+
+        videoImage = videoGO.AddComponent<RawImage>();
+        videoImage.raycastTarget = false;
+        RectTransform videoRect = videoImage.rectTransform;
+        videoRect.anchorMin = Vector2.zero;
+        videoRect.anchorMax = Vector2.one;
+        videoRect.offsetMin = Vector2.zero;
+        videoRect.offsetMax = Vector2.zero;
+
+        videoPlayer = videoGO.AddComponent<VideoPlayer>();
+        videoPlayer.playOnAwake   = false;
+        videoPlayer.isLooping     = false;
+        videoPlayer.source        = VideoSource.VideoClip;
+        videoPlayer.renderMode    = VideoRenderMode.RenderTexture;
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.Direct;
+        videoPlayer.skipOnDrop    = true;
+
+        videoGO.SetActive(false);
     }
 
     private void RefreshCoverSize()

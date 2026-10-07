@@ -164,6 +164,8 @@ GameObject:
   - component: {fileID: 6111880900694570470}
   - component: {fileID: 7205943281503693266}
   - component: {fileID: -5815094046050922235}
+  - component: {fileID: 6003876052633709517}
+  - component: {fileID: 3751118565600465805}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -242,6 +244,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDeviate: 0.4
+  minGroundNormalY: 0.65
   facingDir: 1
   facingRight: 1
   maxFallSpeed: 25
@@ -351,12 +354,44 @@ MonoBehaviour:
   player: {fileID: 0}
   itemController: {fileID: 3838328618029541094}
   anchor: {fileID: 0}
-  centerPoint: {fileID: 0}
+  centerPoint: {fileID: 4096777284023271664}
   dotSprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  spacing: 0.35
-  offset: {x: 0, y: 0.15}
-  dotScale: 1
+  spacing: 0.6
+  offset: {x: 0, y: 0}
+  dotScale: 0.3
   sortingOrder: 12
+--- !u!114 &6003876052633709517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8113888843937255379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d42db0203222b6d439769389eff66ea1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  shearVisual: {fileID: 0}
+  collapseDuration: 0.5
+  revealSpeed: 1.25
+  emergeStartOffset: {x: 0, y: -2}
+--- !u!114 &3751118565600465805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8113888843937255379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e3ae29c31a06c4e95a563a20d97766, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  shearStrength: 1.2
+  fallOppositeFacing: 1
 --- !u!1 &8192718022542724677
 GameObject:
   m_ObjectHideFlags: 0

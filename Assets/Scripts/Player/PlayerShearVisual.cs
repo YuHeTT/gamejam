@@ -30,9 +30,13 @@ public class PlayerShearVisual : MonoBehaviour
         if (player == null)
             player = GetComponentInParent<Player>();
 
-        shearShader = Shader.Find("Custom/PlayerShearSprite");
+        //优先从 Resources 加载：打包后 Shader.Find 可能因着色器未被子物体/材质引用而被剥离，返回 null 导致效果失效。
+        //着色器已放在 Assets/Resources/ 下，保证一定被打进构建。
+        shearShader = Resources.Load<Shader>("PlayerShearSprite");
         if (shearShader == null)
-            Debug.LogError("找不到 Shader Custom/PlayerShearSprite。", this);
+            shearShader = Shader.Find("Custom/PlayerShearSprite");
+        if (shearShader == null)
+            Debug.LogError("找不到 Shader Custom/PlayerShearSprite（请确认 Assets/Resources/PlayerShearSprite.shader 存在）。", this);
 
         GetComponentsInChildren(true, renderers);
     }
