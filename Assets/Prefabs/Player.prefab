@@ -166,6 +166,7 @@ GameObject:
   - component: {fileID: -5815094046050922235}
   - component: {fileID: 6003876052633709517}
   - component: {fileID: 3751118565600465805}
+  - component: {fileID: 1642432569337561967}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -221,10 +222,12 @@ MonoBehaviour:
   squashScaleX: 1.55
   squashScaleY: 0.62
   holdHeight: 1.2
-  holdOffset: {x: -0.45, y: 0.27}
+  holdOffset: {x: 0, y: 0.27}
   previewSortingOrder: 20
   pickUpParamName: PickUp
   pickUpStateName: playerPickUp
+  pickUpScaleFix: {x: 2, y: 2}
+  pickUpOffset: {x: 0, y: 0}
 --- !u!114 &1030243420697749686
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,6 +396,21 @@ MonoBehaviour:
   player: {fileID: 0}
   shearStrength: 1.2
   fallOppositeFacing: 1
+--- !u!114 &1642432569337561967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8113888843937255379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f8a1c7e5d9b42a6b0e2f4c8d1a3b5e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  itemController: {fileID: 0}
+  debugLog: 0
 --- !u!1 &8192718022542724677
 GameObject:
   m_ObjectHideFlags: 0
