@@ -77,7 +77,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -3
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.8930817, g: 0.06459388, b: 0.06459388, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -161,14 +161,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   doorPart: {fileID: 0}
-  sideMargin: 0.1
-  extraTop: 6
   maskLineY: NaN
-  sortingLayerName: 
-  frontSortingOrder: -2147483648
-  backSortingOrder: -2147483648
-  fallbackOrder: -10
+  clipFade: 0.01
+  clipVisual: 1
   trimCollider: 1
   trimLineY: NaN
   minRemainHeight: 0.02
+  rebuildDelta: 0.01
   debugLog: 0
