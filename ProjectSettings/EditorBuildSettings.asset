@@ -8,4 +8,40 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/UI.unity
+    guid: fc4123156fd69d7439f33190bed9bdaa
+  - enabled: 1
+    path: Assets/Scenes/UI_choose.unity
+    guid: cfb91e9f7180c1740a1c14a7991f22f8
+  - enabled: 1
+    path: Assets/Scenes/UI_music.unity
+    guid: abb474216be7a7041a07fcf511b1f6f2
+  - enabled: 1
+    path: Assets/Scenes/UI_settings.unity
+    guid: e760887c832e17d41b86510c3de825ee
+  - enabled: 1
+    path: Assets/Scenes/game1.unity
+    guid: 478102f39d8561e4391b7c5ccb2c2858
+  - enabled: 1
+    path: Assets/Scenes/game2.unity
+    guid: e0f482f30e26a3f4b938b802c0f4bd99
+  - enabled: 1
+    path: Assets/Scenes/game3.unity
+    guid: 02a981febb833194f8dd6edc340169d2
+  - enabled: 1
+    path: Assets/Scenes/game4.unity
+    guid: b8cd81b9aeaca9446b858ffac7573719
+  - enabled: 1
+    path: Assets/Scenes/game5.unity
+    guid: 392497beec599684d9ecfab44541e835
+  - enabled: 1
+    path: Assets/Scenes/game6.unity
+    guid: 158d3c309800c9d4ca8418dff6873e34
+  - enabled: 1
+    path: Assets/Scenes/game7.unity
+    guid: 6dcc46c56ab83424eb2b4d3a87c0b5b7
+  - enabled: 1
+    path: Assets/Scenes/game8.unity
+    guid: b3c86bb7b07b8f042ac49a6d93812b3d
   m_configObjects: {}

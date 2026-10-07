@@ -1892,11 +1892,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1732678460213818991, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 44.59148
+      value: 44.25
       objectReference: {fileID: 0}
     - target: {fileID: 1732678460213818991, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 11.0651245
+      value: 12.25
       objectReference: {fileID: 0}
     - target: {fileID: 1732678460213818991, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1929,6 +1929,34 @@ PrefabInstance:
     - target: {fileID: 1732678460213818991, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2379976382294923380, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2379976382294923380, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 2379976382294923380, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -5.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366460921315205703, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366460921315205703, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366460921315205703, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -5.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6867538194120425670, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
+      propertyPath: maxTravel
+      value: 4.8
       objectReference: {fileID: 0}
     - target: {fileID: 9061310841302465534, guid: ab5eb5ca4583741479a2651a68c2a09f, type: 3}
       propertyPath: m_Name
