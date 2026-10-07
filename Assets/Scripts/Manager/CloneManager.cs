@@ -192,6 +192,19 @@ public class CloneManager : MonoBehaviour
     }
     #endregion
 
+    /// <summary>把所有已存在的复制体的动画组替换掉（玩家换装时调用）。<br/>
+    /// 之后新生成的复制体会在拼装时直接继承玩家当前的动画组，无需再处理。</summary>
+    public void ApplyAnimatorController(RuntimeAnimatorController controller)
+    {
+        for (int i = 0; i < clones.Count; i++)
+        {
+            PlayerClone clone = clones[i];
+            if (clone == null || clone.anim == null) continue;
+            if (clone.anim.runtimeAnimatorController != controller)
+                clone.anim.runtimeAnimatorController = controller;
+        }
+    }
+
     private Player ResolvePlayer()
     {
         if (player == null && PlayerManager.instance != null)

@@ -77,6 +77,9 @@ public class Player : Entity
         if (GetComponent<PlayerGraveTeleportController>() == null)
             gameObject.AddComponent<PlayerGraveTeleportController>();
 
+        if (GetComponent<PlayerAnimationSet>() == null)
+            gameObject.AddComponent<PlayerAnimationSet>();
+
         // 关键：在 Awake 里就把状态机初始化好，而不是等到 Start。
         // 这样 currentState 从第一帧起就非空，Player.Update() 不可能再碰到
         // "stateMachine.currentState 为 null" 的 NullReferenceException（Player.cs:101）。

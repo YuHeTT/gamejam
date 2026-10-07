@@ -20,6 +20,9 @@ public class PlayerState
         this.animBoolName = _animBoolName;
     }
 
+    /// <summary>本状态的动画布尔参数名（换动画组会重置 Animator 参数，需要按当前状态重新置位）</summary>
+    public string AnimBoolName => animBoolName;
+
     public virtual void Enter()
     {
         player.anim.SetBool(animBoolName,true);

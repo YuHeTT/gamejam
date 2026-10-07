@@ -50,7 +50,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: "\u52DF"
   icon: {fileID: 0}
+  animationClips:
+    idle: {fileID: 7400000, guid: 5c455253f6d7f8e42a24ceecdbdcd4f9, type: 2}
+    move: {fileID: 7400000, guid: c9e166d7e0953044388c77a774e31cf3, type: 2}
+    jump: {fileID: 7400000, guid: 5342e80ae755e884e9e33bcf252b251e, type: 2}
   dropOffset: {x: 0, y: -0.8}
+  canTriggerPedal: 0
+  canWeighOnBalance: 0
 --- !u!212 &1518387485528270092
 SpriteRenderer:
   m_ObjectHideFlags: 0
