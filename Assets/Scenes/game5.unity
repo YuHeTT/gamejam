@@ -2846,6 +2846,7 @@ GameObject:
   - component: {fileID: 7945546454346408659}
   - component: {fileID: 501200797009188768}
   - component: {fileID: 8135310915060795109}
+  - component: {fileID: 8135310915060795110}
   m_Layer: 0
   m_Name: door_botton
   m_TagString: door
@@ -3069,6 +3070,30 @@ MonoBehaviour:
   moveSpeed: 8
   closeDelay: 1
   drawGizmos: 1
+--- !u!114 &8135310915060795110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4162245911602485344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab6b4d99451f08b40a80d49c3ede2ff3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorPart: {fileID: 0}
+  sideMargin: 0.1
+  extraTop: 6
+  maskLineY: NaN
+  sortingLayerName: 
+  frontSortingOrder: -2147483648
+  backSortingOrder: -2147483648
+  fallbackOrder: -10
+  trimCollider: 1
+  trimLineY: NaN
+  minRemainHeight: 0.02
+  debugLog: 0
 --- !u!1 &8139698477700787944
 GameObject:
   m_ObjectHideFlags: 0
@@ -3080,6 +3105,7 @@ GameObject:
   - component: {fileID: 4166724751186292844}
   - component: {fileID: 2842053244504069211}
   - component: {fileID: 5747120070709469480}
+  - component: {fileID: 8139698477700787945}
   m_Layer: 0
   m_Name: smalldoor
   m_TagString: door
@@ -3087,6 +3113,30 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8139698477700787945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8139698477700787944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab6b4d99451f08b40a80d49c3ede2ff3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorPart: {fileID: 0}
+  sideMargin: 0.1
+  extraTop: 6
+  maskLineY: NaN
+  sortingLayerName: 
+  frontSortingOrder: -2147483648
+  backSortingOrder: -2147483648
+  fallbackOrder: -10
+  trimCollider: 1
+  trimLineY: NaN
+  minRemainHeight: 0.02
+  debugLog: 0
 --- !u!4 &8392005316069448760
 Transform:
   m_ObjectHideFlags: 0
