@@ -162,6 +162,10 @@ public class PlayerTombstoneTeleport : MonoBehaviour
         Vector2 emergeStart = feetTarget + emergeStartOffset;
         AlignFeetTo(emergeStart);
 
+        //瞬移绕过了镜头切换判定区，这里按落点把相机补切到对应那一屏，
+        //否则相机会留在传送前的另一屏，玩家看不见墓碑（顺便把判定区重新武装）
+        CameraZoneSwitch.SnapCameraToNearest(feetTarget);
+
         float reveal = 0f;
         float speed = Mathf.Max(0.01f, revealSpeed);
         while (reveal < 1f)

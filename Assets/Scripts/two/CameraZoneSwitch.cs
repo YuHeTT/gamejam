@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -37,6 +38,10 @@ public class CameraZoneSwitch : MonoBehaviour
 
     private Collider2D _zone;
 
+    // 所有启用中的判定区。传送这类"直接把玩家瞬移过去"的操作绕过了触发回调，
+    // 需要主动查询判定区来补切镜头，所以这里留一个注册表。
+    private static readonly List<CameraZoneSwitch> All = new List<CameraZoneSwitch>();
+
     // 防抖：一次进入只切换一次，离开判定区后才重新武装
     private bool _armed = true;
 
@@ -71,6 +76,83 @@ public class CameraZoneSwitch : MonoBehaviour
             _camOriginPos = targetCamera.transform.position;
             _hasCamOrigin = true;
         }
+    }
+
+    private void OnEnable()
+    {
+        if (!All.Contains(this))
+            All.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        All.Remove(this);
+    }
+
+    /// <summary>
+    /// 瞬移（墓碑传送等）之后调用：找出离 worldPos 最近的判定区，
+    /// 按落点在它的哪一侧把相机直接吸到设计好的锚点上，并把该区重新武装。<br/>
+    /// 用"最近"来消歧，是因为连续多个判定区（左屏/中屏/右屏）中只有紧挨落点的那一个
+    /// 才知道落点这一屏的取景位。返回是否成功切换。
+    /// </summary>
+    public static bool SnapCameraToNearest(Vector3 worldPos)
+    {
+        CameraZoneSwitch nearest = null;
+        float best = float.PositiveInfinity;
+
+        for (int i = 0; i < All.Count; i++)
+        {
+            CameraZoneSwitch zone = All[i];
+            if (zone == null) continue;
+
+            float sqr = zone.SqrDistanceToZone(worldPos);
+            if (sqr < best)
+            {
+                best = sqr;
+                nearest = zone;
+            }
+        }
+
+        return nearest != null && nearest.SnapFor(worldPos);
+    }
+
+    /// <summary>落点到本判定区矩形的平方距离（落在矩形内为 0）</summary>
+    private float SqrDistanceToZone(Vector3 p)
+    {
+        Bounds b = _zone != null ? _zone.bounds : new Bounds(transform.position, Vector3.zero);
+        float dx = Mathf.Max(b.min.x - p.x, 0f, p.x - b.max.x);
+        float dy = Mathf.Max(b.min.y - p.y, 0f, p.y - b.max.y);
+        return dx * dx + dy * dy;
+    }
+
+    /// <summary>按落点在哪一侧把相机吸到对应锚点，并重新武装本判定区</summary>
+    private bool SnapFor(Vector3 worldPos)
+    {
+        if (targetCamera == null)
+            targetCamera = Camera.main;
+        if (targetCamera == null || cameraIn == null)
+            return false;
+
+        Vector3 inPos  = cameraIn.position;
+        Vector3 outPos = cameraOut != null ? cameraOut.position
+                       : (_hasCamOrigin ? _camOriginPos : inPos);
+
+        Vector3 center = (_zone != null) ? (Vector3)_zone.bounds.center : transform.position;
+
+        float delta = (axis == SwitchAxis.Horizontal) ? worldPos.x - center.x : worldPos.y - center.y;
+        float dirIn = (axis == SwitchAxis.Horizontal) ? inPos.x - outPos.x   : inPos.y - outPos.y;
+
+        //落点落在"去程"那一侧就用 cameraIn，否则回到出发位
+        bool inSide = dirIn * delta >= 0f;
+        Vector3 target = inSide ? inPos : outPos;
+
+        float z = targetCamera.transform.position.z;
+        targetCamera.transform.position = new Vector3(target.x, target.y, z);
+
+        //玩家已被瞬移出判定区，重新武装：否则 _armed 会一直停在 false，
+        //之后正常走进走出也不会再触发切换
+        _armed = true;
+        return true;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

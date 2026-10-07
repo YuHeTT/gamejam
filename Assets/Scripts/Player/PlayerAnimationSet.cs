@@ -111,18 +111,35 @@ public class PlayerAnimationSet : MonoBehaviour
     /// </summary>
     private void LateUpdate()
     {
+        Vector3 target = TargetVisualScale;
+
+        //复制体也要跟着缩放：CloneManager 只在生成时抄过一次玩家视觉的 localScale，
+        //不主动同步的话，切回原始角色后复制体会一直停在变身时的放大值。
+        //复制体从不参与拾取动画的 Q 弹形变，所以这里统一按稳定值同步。
+        CloneManager manager = CloneManager.Existing;
+        if (manager != null)
+            manager.SetVisualScale(target);
+
+        //拾取动画期间玩家视觉由 PlayerItemController 驱动（要做 Q 弹形变），这里让位
         if (player != null && player.isPickingUp) return;
 
         Animator a = Anim;
         if (a == null) return;
 
         Transform visual = a.transform;
-        Vector3 target = itemSetActive
-            ? Vector3.Scale(baseVisualScale, new Vector3(visualScale.x, visualScale.y, 1f))
-            : baseVisualScale;
-
         if (visual.localScale != target)
             visual.localScale = target;
+    }
+
+    /// <summary>当前应有的视觉缩放（不含拾取动画的 Q 弹形变）：持有带动画组的道具时放大，其余还原</summary>
+    private Vector3 TargetVisualScale
+    {
+        get
+        {
+            return itemSetActive
+                ? Vector3.Scale(baseVisualScale, new Vector3(visualScale.x, visualScale.y, 1f))
+                : baseVisualScale;
+        }
     }
 
     private void OnItemChanged(Item item) => Apply(item);
