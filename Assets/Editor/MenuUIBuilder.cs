@@ -50,7 +50,9 @@ public static class MenuUIBuilder
     /// </summary>
     private static ArtYAxis artY
     {
-        get { return (ArtYAxis)EditorPrefs.GetInt("MenuUIBuilder.ArtYAxis", (int)ArtYAxis.Down); }
+        // 已实测确认：本工程美术素材的 y 轴是"向上增大"（与 Canvas 一致），
+        // 用 Down 会导致所有点击框整体上下镜像。
+        get { return (ArtYAxis)EditorPrefs.GetInt("MenuUIBuilder.ArtYAxis", (int)ArtYAxis.Up); }
         set { EditorPrefs.SetInt("MenuUIBuilder.ArtYAxis", (int)value); }
     }
 
@@ -63,38 +65,40 @@ public static class MenuUIBuilder
                   "请重新执行 Tools → UI → 生成主界面与子界面 后查看效果。");
     }
 
-    /// <summary>把美术的 (x, y) 换算成图层/Canvas 的 anchoredPosition（左下原点，y 向上）</summary>
-    private static Vector2 ArtToAnchored(float x, float y)
+    // ============================================================================
+    //  坐标系统一说明（重要）
+    //  美术素材都画在同一张 2500×1500 的画布上；而屏幕可见区是 1920×1080。
+    //  两者比例不同（2500/1500=1.667，1920/1080=1.778），所以**不能**用
+    //  "美术像素 × 固定系数" 去算屏幕位置——那样在某个轴上必然偏移。
+    //
+    //  唯一稳的做法：把美术坐标转成 **0~1 的比例**，再用 anchorMin/anchorMax 设到
+    //  RectTransform 上。这样元素落在"画面内的相对位置"与美术稿完全一致，
+    //  与 Canvas 实际尺寸、分辨率、缩放都无关。
+    // ============================================================================
+
+    /// <summary>美术画布 y → 比例（0=底，1=顶）。artY 控制是否需要镜像。</summary>
+    private static float ArtYToRatio(float artYValue)
     {
-        float vx = x * ART_TO_UI;
-        float vy;
-
-        switch (artY)
-        {
-            case ArtYAxis.Down:
-                // 美术 y 向下 → 镜像到 y 向上
-                vy = (ART_H - y) * ART_TO_UI;
-                break;
-            case ArtYAxis.Up:
-                vy = y * ART_TO_UI;
-                break;
-            default:
-                vy = y * ART_TO_UI;
-                break;
-        }
-
-        return new Vector2(vx, vy);
+        float r = artYValue / ART_H;
+        if (artY == ArtYAxis.Down) r = 1f - r;      // 美术 y 向下增大 → 镜像
+        return Mathf.Clamp01(r);
     }
 
-    /// <summary>美术矩形 (x0,y0,x1,y1) → 点击框的中心与小大（图层坐标，左下原点）</summary>
-    private static void ArtRectToAnchored(float x0, float y0, float x1, float y1,
-                                          out Vector2 center, out Vector2 size)
+    /// <summary>把美术矩形 (x0,y0,x1,y1) 直接设成 RectTransform 的比例锚点</summary>
+    private static void SetAnchorRectFromArt(RectTransform rt,
+                                             float x0, float y0, float x1, float y1)
     {
-        Vector2 a = ArtToAnchored(x0, y0);
-        Vector2 b = ArtToAnchored(x1, y1);
+        float ax0 = Mathf.Clamp01(x0 / ART_W);
+        float ax1 = Mathf.Clamp01(x1 / ART_W);
+        float ay0 = ArtYToRatio(y0);
+        float ay1 = ArtYToRatio(y1);
 
-        center = (a + b) * 0.5f;
-        size = new Vector2(Mathf.Abs(b.x - a.x), Mathf.Abs(b.y - a.y));
+        // 保证 min < max（Y 镜像后可能颠倒）
+        rt.anchorMin = new Vector2(Mathf.Min(ax0, ax1), Mathf.Min(ay0, ay1));
+        rt.anchorMax = new Vector2(Mathf.Max(ax0, ax1), Mathf.Max(ay0, ay1));
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
     }
 
     private const int MaxSpriteSize = 4096;
@@ -103,11 +107,49 @@ public static class MenuUIBuilder
     private const string ArtMusic = "Assets/Art/音乐设置-1等9项文件";
     private const string ArtSettings = "Assets/Art/设置-1等5项文件";
     private const string ArtChoose = "Assets/Art/选关-1等10项文件";
+    private const string ArtArrow = "Assets/Art/arrow";
 
     private const string SceneMain = "Assets/Scenes/UI.unity";
     private const string SceneChoose = "Assets/Scenes/UI_choose.unity";
+    private const string SceneChoose2 = "Assets/Scenes/UI_choose2.unity";
     private const string SceneMusic = "Assets/Scenes/UI_music.unity";
     private const string SceneSettings = "Assets/Scenes/UI_settings.unity";
+
+    /// <summary>
+    /// 开始/退出按钮的点击框整体微调量（1920×1080 设计像素）。<br/>
+    /// 正值 = 屏幕上往下，负值 = 往上。
+    /// </summary>
+    private const float MainButtonYOffsetPixels = 20f;
+
+    /// <summary>
+    /// 选关素材的"文件名序号 → 图上实际数字"是反的（实测）：
+    /// 选关-2=8, -3=7, -4=6, -5=5, -6=4, -7=3, -8=2, -9=1。
+    /// 所以数字 n 对应的文件名是 (10 - n)。
+    /// </summary>
+    private static string ChooseSpriteForNumber(int number)
+    {
+        return "选关-" + (10 - number);
+    }
+
+    /// <summary>
+    /// arrow 素材的原始画布是 2048×2048，箭头本身只占中间 582×439（居中）。
+    /// 换算：箭头包围盒 (774,814)-(1356,1253)，中心 (1065,1033.5)；
+    /// 映射到 2500×1500 的 UI 画布后中心约 (1300, 239)。<br/>
+    /// 下面给出两个占位矩形，宽高比严格保持 582:439 = 1.326（避免拉伸），
+    /// 尺寸与"返回按钮"（173×148 屏幕像素）相当。<br/>
+    /// 右下角箭头：屏幕约 x[1713,1897] y[161,300]；
+    /// 左下角箭头：X 左右镜像成 x[65,249]，Y 不变。
+    /// </summary>
+    private const float ArrowRightX0 = 2266f;
+    private const float ArrowRightY0 = 252f;
+    private const float ArrowRightX1 = 2453f;
+    private const float ArrowRightY1 = 403f;
+
+    // 2500 - 2453 = 47，2500 - 2266 = 234 ⇒ 与右边箭头左右镜像
+    private const float ArrowLeftX0 = 47f;
+    private const float ArrowLeftY0 = ArrowRightY0;
+    private const float ArrowLeftX1 = 234f;
+    private const float ArrowLeftY1 = ArrowRightY1;
 
     [MenuItem("Tools/UI/生成主界面与子界面")]
     public static void BuildAll()
@@ -127,7 +169,8 @@ public static class MenuUIBuilder
         AssetDatabase.Refresh();
 
         BuildMainMenu();
-        BuildSubScene(SceneChoose, ArtChoose, "选关-10_new.png", NavTarget.Main, true);
+        BuildChooseScene();
+        BuildChoose2Scene();
         BuildSubScene(SceneMusic, ArtMusic, "音乐设置-2_new.png", NavTarget.Main);
         BuildSubScene(SceneSettings, ArtSettings, "设置-5_new.png", NavTarget.Main);
 
@@ -137,9 +180,96 @@ public static class MenuUIBuilder
         AssetDatabase.Refresh();
 
         EditorUtility.DisplayDialog("完成",
-            "已生成主界面与三个子界面。\n\n" +
-            "参考分辨率 1920×1080（16:9），四个场景已加入 Build Settings。\n" +
+            "已生成主界面与各子界面。\n\n" +
+            "参考分辨率 1920×1080（16:9），相关场景已加入 Build Settings。\n" +
             "各场景叠加的图层数见 Console。", "好");
+    }
+
+    // ------------------------------------------------------------ 选关 / 选关2
+
+    /// <summary>选关界面：背景 + 8 个关卡按钮（→ game1~8）+ 右下角箭头（→ UI_choose2）+ 返回</summary>
+    // ============================================================================
+    //  两个选关界面共用同一套构建代码。
+    //  唯一差别：
+    //    ① UI_choose  有 8 个按钮（1~8，→ game1~8），箭头在右下角→UI_choose2
+    //    ② UI_choose2 只有上面那排 4 个按钮（1~4，→ other1~4），箭头在左下角→UI_choose
+    //  这样两个界面的按钮大小、位置、点击区、背景完全一致，不会出现"改一个废一个"。
+    // ============================================================================
+
+    // ============================================================================
+    //  箭头（两个选关界面各一个）
+    //  位置：以可见区 1920×1080 为基准的屏幕像素（左下为原点），不经过美术画布换算。
+    //  尺寸：180×136 px（已确认合适，不要改）。
+    //  触发区：在箭头矩形基础上每边外扩，且**挂在 Canvas 上**（不跟随箭头的水平翻转）。
+    // ============================================================================
+    private const float ArrowW = 180f;
+    private const float ArrowH = 136f;
+    private const float ArrowPadPt = 0.10f;
+
+    /// <summary>右下角箭头（choose）：贴住可见区右下角</summary>
+    private static readonly Vector2 ArrowRightXy = new Vector2(1880f - ArrowW, 40f);
+
+    /// <summary>左下角箭头（choose2）：与右下角箭头左右镜像</summary>
+    private static readonly Vector2 ArrowLeftXy = new Vector2(40f, 40f);
+
+    private static void BuildChooseScene()
+    {
+        BuildChooseVariant(SceneChoose, true, null,
+                           "Btn_ArrowRight", ArrowRightXy, false, NavTarget.Choose2);
+    }
+
+    private static void BuildChoose2Scene()
+    {
+        // 只去掉下半部分 5~8 的"贴图"，点击框与其它一切保持不变
+        string[] hideNames = { "选关-2", "选关-3", "选关-4", "选关-5" };
+
+        BuildChooseVariant(SceneChoose2, false, hideNames,
+                           "Btn_ArrowLeft", ArrowLeftXy, true, NavTarget.Choose);
+    }
+
+    /// <summary>
+    /// 构建一个选关界面。<br/>
+    /// <paramref name="withBottomRow"/> = true 时补上 5~8 那排（→ game5~8）。<br/>
+    /// <paramref name="hideLayerNames"/> = 不需要显示的素材图层名（只影响贴图，不影响点击框）。
+    /// </summary>
+    private static void BuildChooseVariant(string scenePath, bool withBottomRow,
+                                           string[] hideLayerNames,
+                                           string arrowName, Vector2 arrowXy,
+                                           bool arrowMirror, NavTarget arrowTarget)
+    {
+        Scene scene = OpenOrCreateScene(scenePath);
+        GameObject canvas = CreateCanvas();
+
+        // 背景 + 全部按钮素材一次性整幅叠加（与主界面同一套做法）
+        Dictionary<string, GameObject> layers = AddLayers(canvas, ArtChoose, hideLayerNames);
+
+        // ---- 上面那排：图上数字 1~4 ----
+        // 素材序号与图上数字相反：选关-9=1、-8=2、-7=3、-6=4
+        // 位置按美术坐标（与整幅图层共用同一坐标系，所以必然与看到的素材对齐）
+        AddLevelHitBox(layers, "选关-9", "选关-9_new", 1, 470, 331, 820, 720);      // 第1列
+        AddLevelHitBox(layers, "选关-8", "选关-8_new", 2, 866, 326, 1216, 707);     // 第2列
+        AddLevelHitBox(layers, "选关-7", "选关-7_new", 3, 1247, 332, 1666, 702);    // 第3列
+        AddLevelHitBox(layers, "选关-6", "选关-6_new", 4, 1648, 339, 2037, 703);    // 第4列
+
+        // ---- 下面那排：图上数字 5~8（仅 UI_choose 需要）----
+        // 素材序号与图上数字相反：选关-5=5、-4=6、-3=7、-2=8
+        if (withBottomRow)
+        {
+            AddLevelHitBox(layers, "选关-5", "选关-5_new", 5, 470, 810, 820, 1194);  // 第1列
+            AddLevelHitBox(layers, "选关-4", "选关-4_new", 6, 866, 804, 1216, 1181); // 第2列
+            AddLevelHitBox(layers, "选关-3", "选关-3_new", 7, 1247, 808, 1666, 1181);// 第3列
+            AddLevelHitBox(layers, "选关-2", "选关-2_new", 8, 1648, 804, 2037, 1177);// 第4列
+        }
+
+        // ---- 返回主界面 ----
+        GameObject backLayer = FindLayer(layers, "选关-10_new");
+        if (backLayer != null)
+            AddChildHitBox(backLayer, "Btn_Back", 233, 142, 458, 334, NavTarget.Main);
+
+        // ---- 箭头 ----
+        AddArrow(canvas, arrowTarget, arrowName, arrowXy, arrowMirror);
+
+        SaveScene(scene, scenePath);
     }
 
     // ------------------------------------------------------------ 主界面
@@ -154,15 +284,18 @@ public static class MenuUIBuilder
         AddOverlay(canvas, ArtMain + "/主界面-8_new.png", "Deco_CatGourd");
         AddOverlay(canvas, ArtMain + "/主界面-7_new.png", "Title");
 
-        // 按钮：整幅视觉图层 + 隐形点击框（点击框用美术画布坐标）
+        // 按钮：整幅视觉图层 + 挂在图层内部的隐形点击框
+        // 开始 / 退出：点击框整体下移 MainButtonYOffsetPixels（实测需要微调）
+        float dy = MainButtonYOffsetPixels / ART_TO_UI;      // 屏幕像素 → 美术像素
+
         AddButtonOverlay(canvas, ArtMain + "/主界面-6_new.png", "Btn_Start",
-                         1164, 795, 1389, 898, NavTarget.Choose);      // 开始 → 选关
+                         1164, 795 + dy, 1389, 898 + dy, NavTarget.Choose);   // 开始 → 选关
         AddButtonOverlay(canvas, ArtMain + "/主界面-5_new.png", "Btn_Quit",
-                         1179, 950, 1390, 1047, NavTarget.Quit);       // 退出 → 结束运行
+                         1179, 950 + dy, 1390, 1047 + dy, NavTarget.Quit);    // 退出 → 结束运行
         AddButtonOverlay(canvas, ArtMain + "/主界面-2_new.png", "Btn_Music",
-                         240, 1210, 381, 1318, NavTarget.Music);       // 音量 → 音乐管理
+                         240, 1210, 381, 1318, NavTarget.Music);              // 音量 → 音乐管理
         AddButtonOverlay(canvas, ArtMain + "/主界面-3_new.png", "Btn_Settings",
-                         448, 1197, 567, 1320, NavTarget.Settings);    // 设置 → 设置界面
+                         448, 1197, 567, 1320, NavTarget.Settings);           // 设置 → 设置界面
 
         SaveScene(scene, SceneMain);
     }
@@ -261,10 +394,163 @@ public static class MenuUIBuilder
         UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, choose.Go);
     }
 
+    /// <summary>把一个文件夹里的素材按序整幅叠加，返回 图层名 → GameObject 的映射</summary>
+    private static Dictionary<string, GameObject> AddLayers(GameObject canvas, string artFolder,
+                                                            string[] skipNames = null)
+    {
+        Dictionary<string, GameObject> map = new Dictionary<string, GameObject>();
+        List<string> files = CollectLayerFiles(artFolder);
+
+        foreach (string fileName in files)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName);
+
+            // 跳过不需要显示的贴图（只影响视觉层，点击框另行添加）
+            if (skipNames != null && System.Array.IndexOf(skipNames, name) >= 0)
+                continue;
+
+            Image img = AddOverlay(canvas, artFolder + "/" + fileName, name);
+            if (img != null) map[name] = img.gameObject;
+        }
+
+        return map;
+    }
+
     /// <summary>
-    /// 在某个整幅图层内部创建点击框。<br/>
-    /// 父图层是 Stretch 的 RectTransform，所以点击框用它自己的 (x0,y0,x1,y1) 直接定位于同一坐标系，
-    /// 不需要任何跨坐标系的换算。
+    /// 箭头按钮。参数是<b>屏幕像素坐标</b>（1920×1080 可见区，左下为原点），
+    /// 尺寸固定 <see cref="ArrowW"/>×<see cref="ArrowH"/>（严格保持素材宽高比，不变形）。<br/>
+    /// 触发区在箭头矩形上每边外扩 <see cref="ArrowPadPt"/>，保证点得到。
+    /// </summary>
+    private static void AddArrow(GameObject canvas, NavTarget target, string nodeName,
+                                 Vector2 xy, bool mirror)
+    {
+        float x0 = xy.x, y0 = xy.y;
+        float x1 = x0 + ArrowW, y1 = y0 + ArrowH;
+
+        GameObject go = new GameObject(nodeName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        go.transform.SetParent(canvas.transform, false);
+
+        RectTransform rt = (RectTransform)go.transform;
+        SetAnchorRectScreen(rt, x0, y0, x1, y1);
+
+        Image img = go.GetComponent<Image>();
+        img.sprite = LoadSprite(ArtArrow + "/arrow_new.png");
+        img.raycastTarget = false;
+        img.preserveAspect = false;
+
+        if (img.sprite == null)
+        {
+            Debug.LogWarning("[MenuUIBuilder] 箭头素材加载失败：" + ArtArrow + "/arrow_new.png");
+            Object.DestroyImmediate(go);
+            return;
+        }
+
+        if (mirror)
+        {
+            Vector3 s = go.transform.localScale;
+            s.x = -Mathf.Abs(s.x);          // 水平翻转：素材朝右 → 朝左
+            go.transform.localScale = s;
+        }
+
+        // 触发区：直接挂在 Canvas 上，按屏幕像素指定矩形。<br/>
+        // 关键：**不能作为箭头节点的子物体** —— 左箭头用 localScale.x = -1 翻转，
+        // 子物体会跟着水平镜像，导致点击框被翻到箭头另一侧（表现为"没贴住、又小又偏"）。
+        float padX = ArrowW * ArrowPadPt;
+        float padY = ArrowH * ArrowPadPt;
+
+        AddHitBoxOnCanvas(canvas, nodeName,
+                          x0 - padX, y0 - padY,
+                          x1 + padX, y1 + padY, target);
+
+        Debug.Log(string.Format(
+            "[MenuUIBuilder] {0}: 箭头 x[{1:F0},{2:F0}] y[{3:F0},{4:F0}] ({5:F0}x{6:F0})；" +
+            "触发区 x[{7:F0},{8:F0}] y[{9:F0},{10:F0}] ({11:F0}x{12:F0})  镜像={13}",
+            nodeName, x0, x1, y0, y1, x1 - x0, y1 - y0,
+            x0 - padX, x1 + padX, y0 - padY, y1 + padY,
+            (x1 - x0) + padX * 2, (y1 - y0) + padY * 2, mirror));
+    }
+
+    /// <summary>
+    /// 在 Canvas 上直接创建一个屏幕像素定位的点击框（不挂在会被翻转/缩放的节点下）。
+    /// </summary>
+    private static GameObject AddHitBoxOnCanvas(GameObject canvas, string name,
+                                                float x0, float y0, float x1, float y1,
+                                                NavTarget? target)
+    {
+        GameObject hit = new GameObject(name + "_Hit",
+            typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        hit.transform.SetParent(canvas.transform, false);
+
+        SetAnchorRectScreen((RectTransform)hit.transform, x0, y0, x1, y1);
+
+        Image img = hit.GetComponent<Image>();
+        img.color = new Color(1f, 1f, 1f, 0f);
+        img.raycastTarget = true;
+
+        Button btn = hit.GetComponent<Button>();
+        btn.targetGraphic = img;
+        btn.transition = Selectable.Transition.None;
+
+        BindClick(hit, btn, target);
+        return hit;
+    }
+
+    /// <summary>屏幕像素矩形（1920×1080 基准，左下原点）→ 比例锚点</summary>
+    private static void SetAnchorRectScreen(RectTransform rt, float x0, float y0, float x1, float y1)
+    {
+        rt.anchorMin = new Vector2(Mathf.Clamp01(Mathf.Min(x0, x1) / UI_W),
+                                   Mathf.Clamp01(Mathf.Min(y0, y1) / UI_H));
+        rt.anchorMax = new Vector2(Mathf.Clamp01(Mathf.Max(x0, x1) / UI_W),
+                                   Mathf.Clamp01(Mathf.Max(y0, y1) / UI_H));
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+    }
+
+    /// <summary>与 <see cref="AddChildHitBox"/> 相同，但走屏幕像素坐标</summary>
+    private static GameObject AddChildHitBoxScreen(GameObject parent, string name,
+                                             float x0, float y0, float x1, float y1,
+                                             NavTarget? target)
+    {
+        GameObject hit = new GameObject(name + "_Hit",
+            typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        hit.transform.SetParent(parent.transform, false);
+
+        SetAnchorRectScreen((RectTransform)hit.transform, x0, y0, x1, y1);
+
+        Image img = hit.GetComponent<Image>();
+        img.color = new Color(1f, 1f, 1f, 0f);
+        img.raycastTarget = true;
+
+        Button btn = hit.GetComponent<Button>();
+        btn.targetGraphic = img;
+        btn.transition = Selectable.Transition.None;
+
+        BindClick(hit, btn, target);
+        return hit;
+    }
+
+    /// <summary>统一绑定点击行为</summary>
+    private static void BindClick(GameObject go, Button btn, NavTarget? target)
+    {
+        if (!target.HasValue) return;
+
+        if (target.Value == NavTarget.Quit)
+        {
+            MenuQuit quit = go.AddComponent<MenuQuit>();
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, quit.QuitGame);
+        }
+        else
+        {
+            MenuNavigation nav = go.AddComponent<MenuNavigation>();
+            nav.targetScene = SceneNameOf(target.Value);
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, nav.Go);
+        }
+    }
+
+    /// <summary>
+    /// 在某个图层内部创建点击框。参数是<b>美术画布坐标</b>（2500×1500），
+    /// 内部直接转成比例锚点，因此与该图层里看到的位置一致。
     /// </summary>
     private static GameObject AddChildHitBox(GameObject parent, string name,
                                              float x0, float y0, float x1, float y1,
@@ -274,16 +560,7 @@ public static class MenuUIBuilder
             typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         hit.transform.SetParent(parent.transform, false);
 
-        RectTransform rt = (RectTransform)hit.transform;
-        rt.anchorMin = Vector2.zero;              // 图层坐标系原点（左下）
-        rt.anchorMax = Vector2.zero;
-        rt.pivot = new Vector2(0.5f, 0.5f);
-
-        Vector2 center, size;
-        ArtRectToAnchored(x0, y0, x1, y1, out center, out size);
-
-        rt.sizeDelta = new Vector2(Mathf.Max(1f, size.x), Mathf.Max(1f, size.y));
-        rt.anchoredPosition = center;
+        SetAnchorRectFromArt((RectTransform)hit.transform, x0, y0, x1, y1);
 
         Image img = hit.GetComponent<Image>();
         img.color = new Color(1f, 1f, 1f, 0f);
@@ -362,7 +639,7 @@ public static class MenuUIBuilder
 
     // ------------------------------------------------------------ 构建工具
 
-    private enum NavTarget { Main, Choose, Music, Settings, Quit }
+    private enum NavTarget { Main, Choose, Choose2, Music, Settings, Quit }
 
     private static Scene OpenOrCreateScene(string path)
     {
@@ -489,6 +766,7 @@ public static class MenuUIBuilder
         switch (target)
         {
             case NavTarget.Choose: return "UI_choose";
+            case NavTarget.Choose2: return "UI_choose2";
             case NavTarget.Music: return "UI_music";
             case NavTarget.Settings: return "UI_settings";
             default: return "UI";
@@ -550,15 +828,20 @@ public static class MenuUIBuilder
     {
         List<EditorBuildSettingsScene> list = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
 
-        // UI 场景 + 所有 gameN 场景（选关按钮要跳它们，不在 Build Settings 里会加载失败）
-        List<string> wanted = new List<string> { SceneMain, SceneChoose, SceneMusic, SceneSettings };
+        // UI 场景 + 所有 gameN / otherN 场景（选关按钮要跳它们，不在 Build Settings 里会加载失败）
+        List<string> wanted = new List<string>
+        {
+            SceneMain, SceneChoose, SceneChoose2, SceneMusic, SceneSettings
+        };
 
         string[] sceneGuids = AssetDatabase.FindAssets("t:Scene", new[] { "Assets/Scenes" });
         foreach (string guid in sceneGuids)
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
             string name = Path.GetFileNameWithoutExtension(path);
-            if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^game\d+$") && !wanted.Contains(path))
+
+            bool isLevelLike = Regex.IsMatch(name, @"^game\d+$") || Regex.IsMatch(name, @"^other\d+$");
+            if (isLevelLike && !wanted.Contains(path))
                 wanted.Add(path);
         }
 
