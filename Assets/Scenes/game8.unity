@@ -122,6 +122,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &75194989 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1514848742738068693, guid: ce17bc4801911ee44bbcbd0511bfcc3e, type: 3}
+  m_PrefabInstance: {fileID: 954198176}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &99407328
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -45953,11 +45958,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1673312831459244549, guid: dc05552130a5ea146a4cf97c01551cb3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 51.46
+      value: 34.85
       objectReference: {fileID: 0}
     - target: {fileID: 1673312831459244549, guid: dc05552130a5ea146a4cf97c01551cb3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.32
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 1673312831459244549, guid: dc05552130a5ea146a4cf97c01551cb3, type: 3}
       propertyPath: m_LocalPosition.z
@@ -46426,11 +46431,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1514848742738068693, guid: ce17bc4801911ee44bbcbd0511bfcc3e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 21.81
+      value: 20.75
       objectReference: {fileID: 0}
     - target: {fileID: 1514848742738068693, guid: ce17bc4801911ee44bbcbd0511bfcc3e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.45
+      value: 1.34
       objectReference: {fileID: 0}
     - target: {fileID: 1514848742738068693, guid: ce17bc4801911ee44bbcbd0511bfcc3e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -54678,6 +54683,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2450358982509763144, guid: e2096ec969bf99d4c8b59549efddc850, type: 3}
+      propertyPath: cameraIn
+      value: 
+      objectReference: {fileID: 1957052070}
+    - target: {fileID: 2450358982509763144, guid: e2096ec969bf99d4c8b59549efddc850, type: 3}
+      propertyPath: playerIn
+      value: 
+      objectReference: {fileID: 75194989}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -54744,6 +54757,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
+--- !u!4 &1957052070 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1673312831459244549, guid: dc05552130a5ea146a4cf97c01551cb3, type: 3}
+  m_PrefabInstance: {fileID: 625551230}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2019654771
 PrefabInstance:
   m_ObjectHideFlags: 0
