@@ -5,7 +5,7 @@ using UnityEngine;
 /// 「募」的复制体计数显示：玩家持有「募」时，在玩家头顶显示一排小点。<br/>
 /// 点数量 = 剩余可用复制体数（CloneManager.maxClones - 已生成数），并按其数量水平居中。<br/>
 /// 剩余为 0 或未持有「募」时完全隐藏（视觉上没有任何显示）。<br/>
-/// 点图片由 Inspector 指定；位置可用 offset 微调，间距用 spacing 调整。
+/// 点图片由 Inspector 指定，渲染颜色默认天蓝色（可用 dotColor 调整）；位置可用 offset 微调，间距用 spacing 调整。
 /// </summary>
 [DisallowMultipleComponent]
 public class CloneCounterDisplay : MonoBehaviour
@@ -25,6 +25,8 @@ public class CloneCounterDisplay : MonoBehaviour
     [Header("点素材")]
     [Tooltip("小点的图片（资产由你在 Inspector 里拖入）")]
     public Sprite dotSprite;
+    [Tooltip("小点的渲染颜色（默认天蓝色，与图片相乘）")]
+    public Color dotColor = new Color32(135, 206, 235, 255);
 
     [Header("布局")]
     [Tooltip("点与点之间的水平间距（世界单位）")]
@@ -124,6 +126,7 @@ public class CloneCounterDisplay : MonoBehaviour
 
             SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = dotSprite;
+            sr.color = dotColor;                                     //渲染成天蓝色
             sr.sortingOrder = sortingOrder;
             if (anchorRenderer != null) sr.sortingLayerID = anchorRenderer.sortingLayerID;
 
