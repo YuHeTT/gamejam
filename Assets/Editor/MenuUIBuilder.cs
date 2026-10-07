@@ -172,7 +172,7 @@ public static class MenuUIBuilder
         BuildChooseScene();
         BuildChoose2Scene();
         BuildSubScene(SceneMusic, ArtMusic, "音乐设置-2_new.png", NavTarget.Main);
-        BuildSubScene(SceneSettings, ArtSettings, "设置-5_new.png", NavTarget.Main);
+        BuildSettingsScene();
 
         AddScenesToBuildSettings();
 
@@ -214,26 +214,29 @@ public static class MenuUIBuilder
 
     private static void BuildChooseScene()
     {
-        BuildChooseVariant(SceneChoose, true, null,
+        BuildChooseVariant(SceneChoose, true, null, "game",
                            "Btn_ArrowRight", ArrowRightXy, false, NavTarget.Choose2);
     }
 
     private static void BuildChoose2Scene()
     {
-        // 只去掉下半部分 5~8 的"贴图"，点击框与其它一切保持不变
+        // ① 去掉下半部分 5~8 的"贴图"（只去贴图，点击框与其它一切不动）
         string[] hideNames = { "选关-2", "选关-3", "选关-4", "选关-5" };
 
-        BuildChooseVariant(SceneChoose2, false, hideNames,
+        // ② 这里的 1~4 按钮要跳 other1~other4（不是 game1~game4）
+        BuildChooseVariant(SceneChoose2, false, hideNames, "other",
                            "Btn_ArrowLeft", ArrowLeftXy, true, NavTarget.Choose);
     }
 
     /// <summary>
     /// 构建一个选关界面。<br/>
-    /// <paramref name="withBottomRow"/> = true 时补上 5~8 那排（→ game5~8）。<br/>
-    /// <paramref name="hideLayerNames"/> = 不需要显示的素材图层名（只影响贴图，不影响点击框）。
+    /// <paramref name="withBottomRow"/> = true 时补上 5~8 那排。<br/>
+    /// <paramref name="hideLayerNames"/> = 不需要显示的素材图层名（只影响贴图，不影响点击框）。<br/>
+    /// <paramref name="levelScenePrefix"/> = 关卡按钮跳转的场景前缀（"game" 或 "other"）。
     /// </summary>
     private static void BuildChooseVariant(string scenePath, bool withBottomRow,
                                            string[] hideLayerNames,
+                                           string levelScenePrefix,
                                            string arrowName, Vector2 arrowXy,
                                            bool arrowMirror, NavTarget arrowTarget)
     {
@@ -246,19 +249,19 @@ public static class MenuUIBuilder
         // ---- 上面那排：图上数字 1~4 ----
         // 素材序号与图上数字相反：选关-9=1、-8=2、-7=3、-6=4
         // 位置按美术坐标（与整幅图层共用同一坐标系，所以必然与看到的素材对齐）
-        AddLevelHitBox(layers, "选关-9", "选关-9_new", 1, 470, 331, 820, 720);      // 第1列
-        AddLevelHitBox(layers, "选关-8", "选关-8_new", 2, 866, 326, 1216, 707);     // 第2列
-        AddLevelHitBox(layers, "选关-7", "选关-7_new", 3, 1247, 332, 1666, 702);    // 第3列
-        AddLevelHitBox(layers, "选关-6", "选关-6_new", 4, 1648, 339, 2037, 703);    // 第4列
+        AddLevelHitBox(layers, "选关-9", "选关-9_new", 1, 470, 331, 820, 720, levelScenePrefix);      // 第1列
+        AddLevelHitBox(layers, "选关-8", "选关-8_new", 2, 866, 326, 1216, 707, levelScenePrefix);     // 第2列
+        AddLevelHitBox(layers, "选关-7", "选关-7_new", 3, 1247, 332, 1666, 702, levelScenePrefix);    // 第3列
+        AddLevelHitBox(layers, "选关-6", "选关-6_new", 4, 1648, 339, 2037, 703, levelScenePrefix);    // 第4列
 
         // ---- 下面那排：图上数字 5~8（仅 UI_choose 需要）----
         // 素材序号与图上数字相反：选关-5=5、-4=6、-3=7、-2=8
         if (withBottomRow)
         {
-            AddLevelHitBox(layers, "选关-5", "选关-5_new", 5, 470, 810, 820, 1194);  // 第1列
-            AddLevelHitBox(layers, "选关-4", "选关-4_new", 6, 866, 804, 1216, 1181); // 第2列
-            AddLevelHitBox(layers, "选关-3", "选关-3_new", 7, 1247, 808, 1666, 1181);// 第3列
-            AddLevelHitBox(layers, "选关-2", "选关-2_new", 8, 1648, 804, 2037, 1177);// 第4列
+            AddLevelHitBox(layers, "选关-5", "选关-5_new", 5, 470, 810, 820, 1194, levelScenePrefix);  // 第1列
+            AddLevelHitBox(layers, "选关-4", "选关-4_new", 6, 866, 804, 1216, 1181, levelScenePrefix); // 第2列
+            AddLevelHitBox(layers, "选关-3", "选关-3_new", 7, 1247, 808, 1666, 1181, levelScenePrefix);// 第3列
+            AddLevelHitBox(layers, "选关-2", "选关-2_new", 8, 1648, 804, 2037, 1177, levelScenePrefix);// 第4列
         }
 
         // ---- 返回主界面 ----
@@ -273,6 +276,81 @@ public static class MenuUIBuilder
     }
 
     // ------------------------------------------------------------ 主界面
+
+    // ============================================================================
+    //  设置界面（UI_settings）
+    //  视觉层：与最初做法完全一致 —— 扫描素材文件夹，每张 PNG 整幅铺满 Canvas。
+    //          因为素材都是 2500×1500 且内容已经在画稿上摆好，铺满即正确，
+    //          **不要给视觉层设锚点、不要缩放、不要重排**。
+    //  点击层：单独挂在 Canvas 根下、用屏幕像素定位（本项目已验证可靠的方式）。
+    // ============================================================================
+    private static void BuildSettingsScene()
+    {
+        Scene scene = OpenOrCreateScene(SceneSettings);
+        GameObject canvas = CreateCanvas();
+
+        // ---- 视觉：整幅铺满，与最初一致 ----
+        foreach (string fileName in CollectLayerFiles(ArtSettings))
+        {
+            string path = ArtSettings + "/" + fileName;
+            AddOverlay(canvas, path, Path.GetFileNameWithoutExtension(fileName));
+        }
+
+        // ---- 逻辑对象（三个按钮的点击都绑到它） ----
+        GameObject logic = new GameObject("LevelSettingsUI", typeof(LevelSettingsUI));
+        logic.transform.SetParent(canvas.transform, false);
+        LevelSettingsUI ui = logic.GetComponent<LevelSettingsUI>();
+
+        // ---- 点击框：挂在 Canvas 根下，用屏幕像素 ----
+        // 美术画布的 y 轴与屏幕相反 ⇒ y' = 1080 - y（已用返回箭头与三段文字双重验证）。
+        // 下面是各段文字在画稿上的**实测**范围（合成整幅图层后逐段量出来的），
+        // 不是 PNG 的透明边包围盒 —— 用包围盒会错（设置-2 下方有 127px 透明区）。
+        //   退出游戏 美术 x[989,1556]  y[496,633]
+        //   退出关卡 美术 x[988,1551]  y[734,882]
+        //   重新开始 美术 x[996,1558]  y[965,1119]
+        // 点框比文字略放大，手感更好；退出游戏按需求把高度缩到 0.8 倍。
+
+        // 退出游戏：美术 y[496,633] → 翻屏 y[566,697]，外扩到 y[560,703] 后高度 ×0.8 → y[574,689]
+        AddSettingsHitBox(canvas, "Btn_QuitGame", 755, 574, 1200, 689, ui, "OnQuitGame");
+
+        // 退出关卡：美术 y[734,882] → 翻屏 y[403,516]，外扩到 y[397,522]
+        AddSettingsHitBox(canvas, "Btn_QuitLevel", 754, 397, 1196, 522, ui, "OnQuitLevel");
+
+        // 重新开始：美术 y[965,1119] → 翻屏 y[221,339]，外扩到 y[215,345]
+        AddSettingsHitBox(canvas, "Btn_Restart", 760, 215, 1201, 345, ui, "OnRestart");
+
+        // 返回箭头：美术 y[142,334] → 翻屏 y[823,971]（已在画面上验证正确）
+        AddSettingsHitBox(canvas, "Btn_Back", 179, 823, 352, 971, ui, "OnBack");
+
+        SaveScene(scene, SceneSettings);
+
+        Debug.Log("[MenuUIBuilder] UI_settings：视觉层整幅铺满（同最初），" +
+                  "四个点击框用屏幕像素定位（退出游戏/退出关卡/重新开始/返回）。");
+    }
+
+    /// <summary>设置界面上的一个点击框（挂在 Canvas 根下，屏幕像素定位）</summary>
+    private static void AddSettingsHitBox(GameObject canvas, string name,
+                                          float x0, float y0, float x1, float y1,
+                                          LevelSettingsUI ui, string method)
+    {
+        Button btn = LevelUiUtil.CreateHitBox(canvas.transform, name, x0, y0, x1, y1);
+
+        if (ui == null) return;
+
+        UnityEditor.Events.UnityEventTools.AddPersistentListener(
+            btn.onClick, GetSettingsMethod(ui, method));
+    }
+
+    private static UnityEngine.Events.UnityAction GetSettingsMethod(LevelSettingsUI ui, string method)
+    {
+        switch (method)
+        {
+            case "OnQuitGame": return ui.OnQuitGame;
+            case "OnQuitLevel": return ui.OnQuitLevel;
+            case "OnRestart": return ui.OnRestart;
+            default: return ui.OnBack;
+        }
+    }
 
     private static void BuildMainMenu()
     {
@@ -294,8 +372,10 @@ public static class MenuUIBuilder
                          1179, 950 + dy, 1390, 1047 + dy, NavTarget.Quit);    // 退出 → 结束运行
         AddButtonOverlay(canvas, ArtMain + "/主界面-2_new.png", "Btn_Music",
                          240, 1210, 381, 1318, NavTarget.Music);              // 音量 → 音乐管理
-        AddButtonOverlay(canvas, ArtMain + "/主界面-3_new.png", "Btn_Settings",
-                         448, 1197, 567, 1320, NavTarget.Settings);           // 设置 → 设置界面
+
+        // 设置按钮：按需求「主界面的设置按键暂设不可用」——这里不再生成点击框。
+        // 齿轮视觉仍然保留（主界面-3_new 那一层照旧叠加），只是点不动。
+        AddOverlay(canvas, ArtMain + "/主界面-3_new.png", "Btn_Settings");
 
         SaveScene(scene, SceneMain);
     }
@@ -374,9 +454,15 @@ public static class MenuUIBuilder
         return null;
     }
 
+    /// <summary>
+    /// 关卡按钮：在对应素材图层内加点击框，并跳到 <paramref name="levelScenePrefix"/> + 关卡号。<br/>
+    /// 例如 levelScenePrefix = "game" 且 level = 3 ⇒ 跳 game3；传 "other" ⇒ 跳 other3。<br/>
+    /// 默认 "game"，所以旧调用点无需改动。
+    /// </summary>
     private static void AddLevelHitBox(Dictionary<string, GameObject> layerByName,
                                        string nameA, string nameB, int level,
-                                       float x0, float y0, float x1, float y1)
+                                       float x0, float y0, float x1, float y1,
+                                       string levelScenePrefix = "game")
     {
         GameObject layer = FindLayer(layerByName, nameA);
         if (layer == null) layer = FindLayer(layerByName, nameB);
@@ -389,9 +475,22 @@ public static class MenuUIBuilder
         GameObject hit = AddChildHitBox(layer, "Btn_Level" + level, x0, y0, x1, y1, null);
         Button btn = hit.GetComponent<Button>();
 
-        MenuChooseLevel choose = hit.AddComponent<MenuChooseLevel>();
-        choose.levelNumber = level;
-        UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, choose.Go);
+        if (levelScenePrefix == "other")
+        {
+            // 跳 other{关卡号}
+            MenuNavigation nav = hit.AddComponent<MenuNavigation>();
+            nav.targetScene = "other" + level;
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, nav.Go);
+        }
+        else
+        {
+            // 跳 game{关卡号}
+            MenuChooseLevel choose = hit.AddComponent<MenuChooseLevel>();
+            choose.levelNumber = level;
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, choose.Go);
+        }
+
+        Debug.Log("[MenuUIBuilder] 关卡按钮 " + level + " → " + levelScenePrefix + level);
     }
 
     /// <summary>把一个文件夹里的素材按序整幅叠加，返回 图层名 → GameObject 的映射</summary>
@@ -405,8 +504,13 @@ public static class MenuUIBuilder
         {
             string name = Path.GetFileNameWithoutExtension(fileName);
 
-            // 跳过不需要显示的贴图（只影响视觉层，点击框另行添加）
-            if (skipNames != null && System.Array.IndexOf(skipNames, name) >= 0)
+            // 跳过不需要显示的贴图（只影响视觉层，点击框另行添加）<br/>
+            // 注意：实际文件名带 _new 后缀（如 "选关-2_new"），比较时要去掉，
+            // 否则跳过列表 "选关-2" 永远匹配不上。
+            string baseName = name.EndsWith("_new") ? name.Substring(0, name.Length - 4) : name;
+            if (skipNames != null &&
+                (System.Array.IndexOf(skipNames, name) >= 0 ||
+                 System.Array.IndexOf(skipNames, baseName) >= 0))
                 continue;
 
             Image img = AddOverlay(canvas, artFolder + "/" + fileName, name);
