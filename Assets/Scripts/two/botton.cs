@@ -2,6 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 按钮：玩家（或其它未被排除的物体）压在触发区上时把 <see cref="door"/> 匀速顶起来，离开 1 秒后落回。<br/>
+/// 谁能触发由 <see cref="MechanismQuery"/> 统一决定：道具与墓碑默认<b>不参与</b>按钮互动
+/// （需要让某个道具压按钮时，勾上该道具的 canTriggerPedal）。
+/// </summary>
 public class botton : MonoBehaviour
 {
     public GameObject door;
@@ -40,11 +45,14 @@ public class botton : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
+        //道具/墓碑默认不参与：与 triggerfloor、PlatformSensor 用同一套过滤规则
+        if (!MechanismQuery.CanTriggerPedal(collision)) return;
         opendoor();
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
+        if (!MechanismQuery.CanTriggerPedal(collision)) return;
         Invoke("closedoor", 1f); 
     }
 

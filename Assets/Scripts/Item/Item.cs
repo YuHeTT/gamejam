@@ -50,7 +50,36 @@ public class Item : MonoBehaviour
         sr  = GetComponentInChildren<SpriteRenderer>();
         rb  = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
+
+        //道具不与箱子发生物理碰撞（玩家与箱子照常碰）
+        IgnoreBoxCollisions();
     }
+
+    #region 与箱子的碰撞豁免
+    /// <summary>让本道具的碰撞体与场景里所有 box 标签物体互不碰撞。<br/>
+    /// 每次调用都重新扫描：场景重载（死亡重置）后缓存会失效，而道具数量很少，开销可忽略。</summary>
+    private void IgnoreBoxCollisions()
+    {
+        if (col == null) return;
+
+        Collider2D[] all = FindObjectsOfType<Collider2D>(true);
+        for (int i = 0; i < all.Length; i++)
+        {
+            Collider2D box = all[i];
+            if (box == null || box == col) continue;
+            if (!IsBoxTagged(box.transform)) continue;
+            Physics2D.IgnoreCollision(col, box, true);
+        }
+    }
+
+    /// <summary>箱子标签可能挂在碰撞体自身或它的父物体上</summary>
+    private static bool IsBoxTagged(Transform t)
+    {
+        if (t == null) return false;
+        if (t.CompareTag("box")) return true;
+        return t.parent != null && t.parent.CompareTag("box");
+    }
+    #endregion
 
     #region 能力扩展点（子类在此填写具体能力）
     /// <summary>进入道具栏时触发</summary>
@@ -131,6 +160,9 @@ public class Item : MonoBehaviour
         if (rb  != null) rb.simulated = present;
         if (col != null) col.enabled  = present;
         if (sr  != null) sr.enabled   = present;
+
+        //碰撞体禁用再启用后忽略关系会丢，放回世界时补一次
+        if (present) IgnoreBoxCollisions();
     }
     #endregion
 }

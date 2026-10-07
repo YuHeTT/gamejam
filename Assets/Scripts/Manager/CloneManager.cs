@@ -205,6 +205,22 @@ public class CloneManager : MonoBehaviour
         }
     }
 
+    /// <summary>把所有已存在复制体的视觉缩放同步到指定值（玩家换装/还原时调用）。<br/>
+    /// 复制体只在生成时抄过一次玩家视觉的 localScale，不主动同步的话玩家切回原始角色后
+    /// 复制体会一直停在变身时的放大值。注意：复制体不参与拾取动画的 Q 弹形变，传稳定值。</summary>
+    public void SetVisualScale(Vector3 scale)
+    {
+        for (int i = 0; i < clones.Count; i++)
+        {
+            PlayerClone clone = clones[i];
+            if (clone == null || clone.anim == null) continue;
+
+            Transform visual = clone.anim.transform;
+            if (visual.localScale != scale)
+                visual.localScale = scale;
+        }
+    }
+
     private Player ResolvePlayer()
     {
         if (player == null && PlayerManager.instance != null)
