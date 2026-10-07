@@ -7,7 +7,9 @@ using UnityEngine;
 /// 玩家踩上 triggerfloors 时降下来（closedPosition），离开后升上去（openedPosition）。<br/>
 /// 勾选 useLoopMode 后无视触发机关：自动在两端之间循环往复，并在每端停留 loopEndPause 秒。<br/>
 /// 勾选 useHorizontalMove 后改为左右移动（沿 X 平移 moveDistance，方向由 horizontalMoveToLeft 决定），而不是上下；
-/// 水平模式下不做压扁（压扁/限位都是按竖直方向设计的），只做平移。<br/><br/>
+/// 水平模式下不做压扁（压扁/限位都是按竖直方向设计的），只做平移；<br/>
+/// 水平模式下若勾选 carryRiders，会把站在平台顶面上的物体（主要是玩家）一起带着走，
+/// 物体跳跃或走出平台即自动脱离。<br/><br/>
 /// 新增机制：下降途中压到箱子（标签 box）时，箱子会**随着下降逐渐压扁**——
 /// 压扁进度由升降梯压入箱子的深度决定，升降梯是匀速下降的，
 /// 所以压扁推进速度天然与下降速度相关（想更快就调小 squashHeight）。<br/>
@@ -36,6 +38,16 @@ public class updown : MonoBehaviour
     public bool useHorizontalMove = false;
     [Tooltip("仅水平模式生效：勾选=向左（-X），不勾选=向右（+X）")]
     public bool horizontalMoveToLeft = false;
+
+    [Header("承载（仅水平模式）")]
+    [Tooltip("勾选后水平移动时会把站在平台顶面上的物体（主要是玩家）一起带着走；物体跳跃或走出平台后自动脱离")]
+    public bool carryRiders = true;
+    [Tooltip("承载探测盒的厚度（米）：平台顶面以上这个厚度内、且脚底贴面的物体会被带走")]
+    public float carryDetectHeight = 0.4f;
+    [Tooltip("脚底低于平台顶面多少以内算“站在上面”（米），用于排除从上方飞过的物体")]
+    public float carryFootTolerance = 0.15f;
+    [Tooltip("承载对象的层掩码，保持 Everything 即可（脚本会自行过滤掉静态/无刚体对象）")]
+    public LayerMask carryMask = ~0;
 
     [Header("压扁箱子")]
     [Tooltip("压扁后的横向倍率（长 ×2）")]
@@ -86,6 +98,11 @@ public class updown : MonoBehaviour
     private ContactFilter2D _boxFilter;
     private ContactFilter2D _wallFilter;
 
+    // 承载探测（水平模式）：复用的查询容器，避免每帧分配
+    private readonly Collider2D[] _riderBuffer = new Collider2D[8];
+    private ContactFilter2D _riderFilter;
+    private readonly List<Rigidbody2D> _processedRiders = new List<Rigidbody2D>();
+
     // 完全压扁后，升降梯能到达的最低 Y
     private float _descentLimitY = float.NegativeInfinity;
 
@@ -117,6 +134,11 @@ public class updown : MonoBehaviour
         _wallFilter.useLayerMask = wallMask.value != 0;
         if (wallMask.value != 0)
             _wallFilter.layerMask = wallMask;
+
+        _riderFilter = new ContactFilter2D();
+        _riderFilter.useTriggers = false;
+        _riderFilter.useLayerMask = true;
+        _riderFilter.layerMask = carryMask;
 
         if (boxMask.value == 0)
             Debug.LogWarning("updown: boxMask 是 Nothing，将无法识别箱子。", this);
@@ -170,6 +192,13 @@ public class updown : MonoBehaviour
         // 2a) 水平模式：只做左右平移。压扁/限位都是按竖直方向设计的，这里直接跳过
         if (useHorizontalMove)
         {
+            Vector3 delta = next - transform.position;
+
+            // 先把站在平台顶面上的物体按同样的位移带走，再移动平台本身（相对位置保持不变）。
+            // 只按逐帧位移搬运：物体跳跃/走出平台后下一帧就探测不到，自然脱离，无需额外解绑。
+            if (carryRiders && delta.sqrMagnitude > 0f)
+                CarryRiders(delta);
+
             transform.position = next;
             Physics2D.SyncTransforms();
             return;
@@ -470,6 +499,57 @@ public class updown : MonoBehaviour
         return transform.position.y + _bottomOffset;
     }
 
+    /// <summary>升降梯顶面当前的世界 Y</summary>
+    private float GetElevatorTopY()
+    {
+        if (_elevatorCollider != null)
+            return _elevatorCollider.bounds.max.y;
+
+        return transform.position.y;
+    }
+
+    /// <summary>
+    /// 水平模式下，把"站在平台顶面上的物体"按同样的位移一起带走（主要是玩家）。<br/>
+    /// 只处理带 Dynamic 刚体的物体（玩家、箱子等），平台自己与静态/运动学物体不动。<br/>
+    /// 因为搬运量就是平台本帧的位移，所以玩家用自身速度跳跃或走出平台后，
+    /// 下一帧便不再落在探测盒内 → 自动脱离，不需要额外的解绑逻辑。<br/>
+    /// 注意：玩家速度由输入直接赋值（<see cref="Player.HorizontalMoveController"/>），
+    /// 单纯给速度加平台分量会被覆盖，所以这里改的是刚体位置而不是速度。
+    /// </summary>
+    private void CarryRiders(Vector3 delta)
+    {
+        if (_elevatorCollider == null) return;
+
+        Bounds eb = _elevatorCollider.bounds;
+        float top = eb.max.y;
+        float h = Mathf.Max(0.05f, carryDetectHeight);
+
+        // 探测盒：紧贴平台顶面之上，宽度与平台一致
+        Vector2 center = new Vector2(eb.center.x, top + h * 0.5f);
+        Vector2 size = new Vector2(Mathf.Max(0.05f, eb.size.x), h);
+
+        int count = Physics2D.OverlapBox(center, size, 0f, _riderFilter, _riderBuffer);
+
+        _processedRiders.Clear();
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D col = _riderBuffer[i];
+            if (col == null || col == _elevatorCollider) continue;
+
+            Rigidbody2D body = col.attachedRigidbody;
+            if (body == null || body.bodyType != RigidbodyType2D.Dynamic) continue;
+            if (body.transform.IsChildOf(transform)) continue;      // 平台自己的子物体不搬
+            if (_processedRiders.Contains(body)) continue;          // 同一刚体的多个碰撞体只搬一次
+
+            // 脚底必须贴着平台顶面，才算"站在上面"（排除从上方飞过的物体）
+            if (col.bounds.min.y > top + carryFootTolerance) continue;
+
+            _processedRiders.Add(body);
+            body.position += (Vector2)delta;
+        }
+    }
+
     /// <summary>
     /// 箱子判定：**只认 box 标签**（按用户要求，后续压死玩家也用标签区分）。<br/>
     /// 不要求 Dynamic 刚体——静态/运动学的箱子同样能被压扁。<br/>
@@ -517,5 +597,20 @@ public class updown : MonoBehaviour
         Gizmos.DrawWireCube(
             new Vector3(transform.position.x, bottom - crushThreshold * 0.5f, 0f),
             new Vector3(Mathf.Max(0.05f, _elevatorHalfWidth * 2f), crushThreshold, 0.01f));
+
+        // 水平模式：画出承载探测盒（平台顶面之上），确认它覆盖站立区域
+        if (useHorizontalMove && carryRiders)
+        {
+            Collider2D col = GetComponent<Collider2D>();
+            if (col != null)
+            {
+                float h = Mathf.Max(0.05f, carryDetectHeight);
+                Bounds cb = col.bounds;
+                Gizmos.color = new Color(0.4f, 1f, 0.6f, 1f);
+                Gizmos.DrawWireCube(
+                    new Vector3(cb.center.x, cb.max.y + h * 0.5f, 0f),
+                    new Vector3(Mathf.Max(0.05f, cb.size.x), h, 0.01f));
+            }
+        }
     }
 }
