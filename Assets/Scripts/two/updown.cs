@@ -5,7 +5,9 @@ using UnityEngine;
 /// <summary>
 /// 升降梯：与 <see cref="doorwithtrigger"/> 原理相同、触发条件相反——<br/>
 /// 玩家踩上 triggerfloors 时降下来（closedPosition），离开后升上去（openedPosition）。<br/>
-/// 勾选 useLoopMode 后无视触发机关：自动在两端之间循环往复，并在每端停留 loopEndPause 秒。<br/><br/>
+/// 勾选 useLoopMode 后无视触发机关：自动在两端之间循环往复，并在每端停留 loopEndPause 秒。<br/>
+/// 勾选 useHorizontalMove 后改为左右移动（沿 X 平移 moveDistance，方向由 horizontalMoveToLeft 决定），而不是上下；
+/// 水平模式下不做压扁（压扁/限位都是按竖直方向设计的），只做平移。<br/><br/>
 /// 新增机制：下降途中压到箱子（标签 box）时，箱子会**随着下降逐渐压扁**——
 /// 压扁进度由升降梯压入箱子的深度决定，升降梯是匀速下降的，
 /// 所以压扁推进速度天然与下降速度相关（想更快就调小 squashHeight）。<br/>
@@ -28,6 +30,12 @@ public class updown : MonoBehaviour
     public bool useLoopMode = false;
     [Tooltip("循环模式下到达任意一端后的停留时间（秒）")]
     public float loopEndPause = 1f;
+
+    [Header("移动方向（可选）")]
+    [Tooltip("勾选后改为左右移动（沿 X 平移 moveDistance），而不是上下移动；水平模式下不做压扁")]
+    public bool useHorizontalMove = false;
+    [Tooltip("仅水平模式生效：勾选=向左（-X），不勾选=向右（+X）")]
+    public bool horizontalMoveToLeft = false;
 
     [Header("压扁箱子")]
     [Tooltip("压扁后的横向倍率（长 ×2）")]
@@ -117,8 +125,11 @@ public class updown : MonoBehaviour
     private void Start()
     {
         closedPosition = transform.position;
-        // 向上移动 moveDistance 米
-        openedPosition = closedPosition + Vector3.up * moveDistance;
+        // 默认向上移动 moveDistance 米；开启水平模式后改为向左或向右移动
+        Vector3 moveAxis = useHorizontalMove
+            ? (horizontalMoveToLeft ? Vector3.left : Vector3.right)
+            : Vector3.up;
+        openedPosition = closedPosition + moveAxis * moveDistance;
         targetPosition = closedPosition;
         _bottomOffset = FindElevatorBottomOffset();
         _bottomOffsetReady = true;
@@ -155,6 +166,14 @@ public class updown : MonoBehaviour
             transform.position,
             targetPosition,
             moveSpeed * Time.deltaTime);
+
+        // 2a) 水平模式：只做左右平移。压扁/限位都是按竖直方向设计的，这里直接跳过
+        if (useHorizontalMove)
+        {
+            transform.position = next;
+            Physics2D.SyncTransforms();
+            return;
+        }
 
         // 3) 判定下降意图。这里**必须用目标位置**，不能用"上一帧有没有实际位移"：
         //    被箱子顶面限位时实际位移为 0，用位移判断会让下一帧直接跳过压扁推进，压扁就永远停在起点。
