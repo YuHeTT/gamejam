@@ -130,10 +130,31 @@ public class DoorMask : MonoBehaviour
         if (_renderers.Count == 0 || _mpb == null) return;
 
         _mpb.SetFloat("_ClipLineY", worldY);
+
+        // 统一走 RefreshRenderers 施加（材质 + 裁剪线一起补），避免两处逻辑不一致
+        RefreshRenderers();
+    }
+
+    /// <summary>
+    /// 重新收集"门自身 + 子物体"上的 SpriteRenderer，并把裁剪材质与裁剪线补给新出现的渲染器。<br/>
+    /// 原实现只在 Awake 收集一次，所以给门<b>加子物体</b>（或换渲染器/换贴图导致渲染器变化）之后，
+    /// 新渲染器不会被裁剪：它既不受裁剪线约束（向上超出门顶的部分不消失），
+    /// 也会按自己的排序值画在门前面 —— 表现就是"加贴图或子物体后显示异常"。<br/>
+    /// GetComponentsInChildren 的 List 重载不产生 GC，可以每帧调用。
+    /// </summary>
+    private void RefreshRenderers()
+    {
+        if (_clipMat == null || _mpb == null) return;
+
+        Part.GetComponentsInChildren(true, _renderers);
+
         for (int i = 0; i < _renderers.Count; i++)
         {
-            if (_renderers[i] == null) continue;
-            _renderers[i].SetPropertyBlock(_mpb);
+            SpriteRenderer sr = _renderers[i];
+            if (sr == null) continue;
+
+            if (sr.sharedMaterial != _clipMat) sr.sharedMaterial = _clipMat;
+            sr.SetPropertyBlock(_mpb);
         }
     }
 
@@ -141,6 +162,11 @@ public class DoorMask : MonoBehaviour
     private void LateUpdate()
     {
         if (!_ready) return;
+
+        // 每帧把"门 + 子物体"上的渲染器补齐裁剪材质与裁剪线：
+        // 这样给门加子物体（或改变渲染器/贴图）后，新渲染器会立刻按同一条线裁剪，
+        // 不会再出现"加子物体后显示异常"。
+        RefreshRenderers();
 
         float travel = Part.position.y - _startY;
 
@@ -190,9 +216,20 @@ public class DoorMask : MonoBehaviour
             _colliderDisabled = false;
         }
 
-        // 每次都由原始值重算，绝不在当前值上累减
-        _box.size = new Vector2(_origSize.x, remain / _origScaleY);
-        _box.offset = new Vector2(_origOffset.x, (remain * 0.5f) / _origScaleY);
+        // 每次都由原始值重算，绝不在当前值上累减。
+        //
+        // 关键：底边必须保持不动。
+        //   原始底边（局部）= _origOffset.y - _origSize.y * 0.5f
+        //   新 offset.y     = 原始底边 + 新高度 * 0.5f
+        // 旧写法 (remain * 0.5f) / _origScaleY 相当于把底边对到了门的**中心**：
+        // 门预制体是 scale.y = 4、collider size.y = 1，remain=原高 4 时旧式算出 offset.y = 0.5，
+        // 而正确值是 0 —— 碰撞体整体上移 0.5 局部 = 2 个世界单位，门的下半截不再挡人，玩家直接穿过去。
+        // 而且门落回原位时它仍算出 0.5，所以是**永久**错位，不是抖动。
+        float newSizeY = remain / _origScaleY;
+        float bottomLocal = _origOffset.y - _origSize.y * 0.5f;
+
+        _box.size = new Vector2(_origSize.x, newSizeY);
+        _box.offset = new Vector2(_origOffset.x, bottomLocal + newSizeY * 0.5f);
         _lastAppliedHeight = remain;
 
         Physics2D.SyncTransforms();
