@@ -102,7 +102,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: "\u672A\u547D\u540D\u9053\u5177"
   icon: {fileID: 0}
+  animationClips:
+    idle: {fileID: 7400000, guid: c0d5bbad03711c3448c11c0a94edc146, type: 2}
+    move: {fileID: 7400000, guid: 1d1e71e3b136c3548a1cf32c7786a894, type: 2}
+    jump: {fileID: 7400000, guid: ec7dbc9da42f7fe4b9e7f817cd564486, type: 2}
   dropOffset: {x: 0, y: -0.8}
+  canTriggerPedal: 0
+  canWeighOnBalance: 0
 --- !u!50 &2248526218323469066
 Rigidbody2D:
   serializedVersion: 4
