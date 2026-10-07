@@ -354,10 +354,10 @@ public class PlayerItemController : MonoBehaviour
             var fix = new Vector3(pickUpScaleFix.x, pickUpScaleFix.y, 1f);
             playerVisual.localScale = Vector3.Scale(Vector3.Scale(playerVisualBaseScale, fix), factor);
 
-            //位置补偿：x 随角色朝向镜像，避免翻转后偏到另一侧
-            float facing = playerVisualBaseScale.x < 0f ? -1f : 1f;
+            //位置补偿：偏移写在根物体的本地空间里，而翻转是根物体绕 Y 转 180°，
+            //所以 x 会随朝向自动镜像，这里不需要再乘方向。
             playerVisual.localPosition = playerVisualBasePosition
-                + new Vector3(pickUpOffset.x * facing, pickUpOffset.y, 0f);
+                + new Vector3(pickUpOffset.x, pickUpOffset.y, 0f);
         }
 
         if (pendingItem != null)
