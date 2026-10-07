@@ -48,6 +48,10 @@ public class PlayerItemController : MonoBehaviour
     public string pickUpParamName = "PickUp";
     [Tooltip("Animator 里拾取状态的名称（交换道具时用它从头重播）")]
     public string pickUpStateName = "playerPickUp";
+    [Tooltip("拾取动画期间的视觉尺寸修正倍率：弥补旧图集里角色画得偏小（实测约需 2 倍）。只作用于玩家视觉，不影响道具")]
+    public Vector2 pickUpScaleFix = new Vector2(2f, 2f);
+    [Tooltip("拾取动画期间的视觉位置补偿（本地空间：x 随角色朝向自动镜像，y 上下）。缩放后脚底/头顶没对齐时才需要调")]
+    public Vector2 pickUpOffset = Vector2.zero;
 
     /// <summary>当前持有的道具</summary>
     public Item CurrentItem { get; private set; }
@@ -65,6 +69,7 @@ public class PlayerItemController : MonoBehaviour
     //视觉还原缓存：只缩放玩家的"视觉子物体"，绝不缩放带碰撞体的根物体
     private Transform playerVisual;
     private Vector3 playerVisualBaseScale;
+    private Vector3 playerVisualBasePosition;
     private bool playerVisualScaleCached;
     private Vector3 itemBaseScale;
     private int itemBaseSortingOrder;
@@ -343,7 +348,17 @@ public class PlayerItemController : MonoBehaviour
         var factor = new Vector3(sx, sy, 1f);
 
         if (playerVisual != null)
-            playerVisual.localScale = Vector3.Scale(playerVisualBaseScale, factor);
+        {
+            //在 Q 弹三段缩放之上再叠加尺寸修正：旧图集的拾取帧画得比新图集小一圈，
+            //这里用 pickUpScaleFix 补齐；只作用于玩家视觉，道具保持原样。
+            var fix = new Vector3(pickUpScaleFix.x, pickUpScaleFix.y, 1f);
+            playerVisual.localScale = Vector3.Scale(Vector3.Scale(playerVisualBaseScale, fix), factor);
+
+            //位置补偿：x 随角色朝向镜像，避免翻转后偏到另一侧
+            float facing = playerVisualBaseScale.x < 0f ? -1f : 1f;
+            playerVisual.localPosition = playerVisualBasePosition
+                + new Vector3(pickUpOffset.x * facing, pickUpOffset.y, 0f);
+        }
 
         if (pendingItem != null)
             pendingItem.transform.localScale = Vector3.Scale(itemBaseScale, factor);
@@ -356,6 +371,7 @@ public class PlayerItemController : MonoBehaviour
         {
             playerVisual           = player.anim.transform;   //玩家视觉是根物体下的子物体
             playerVisualBaseScale  = playerVisual.localScale;
+            playerVisualBasePosition = playerVisual.localPosition;
             playerVisualScaleCached = true;
         }
 
@@ -375,7 +391,10 @@ public class PlayerItemController : MonoBehaviour
     private void RestoreVisuals()
     {
         if (playerVisual != null)
-            playerVisual.localScale = playerVisualBaseScale;
+        {
+            playerVisual.localScale    = playerVisualBaseScale;
+            playerVisual.localPosition = playerVisualBasePosition;
+        }
 
         if (pendingItem == null) return;
 
