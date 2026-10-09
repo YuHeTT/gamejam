@@ -18,6 +18,10 @@ public class PlayerGraveTeleportController : MonoBehaviour
 
     private void Update()
     {
+        // 暂停（设置面板打开）时不接受传送输入
+        if (GamePause.IsPaused)
+            return;
+
         if (player == null || tombstoneTeleport == null)
             return;
 

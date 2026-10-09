@@ -1,11 +1,14 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
-/// 设置界面（UI_settings）的交互逻辑。<br/>
-/// 三个按钮：退出游戏 / 退出关卡 / 重新开始；左上角返回箭头回到进来的那个关卡。<br/>
-/// 同时支持键盘 1 / 2 / 3。注意：本界面 <see cref="Time.timeScale"/> = 0，
-/// 但 <c>Input.GetKeyDown</c> 依然有效，所以按键可以正常工作。
+/// 设置界面的交互逻辑。两种挂法都能用：<br/>
+/// <list type="bullet">
+/// <item><b>面板模式（推荐）</b>：挂在 LevelUI 预制体的 SettingsPanel 上。返回 = 关掉面板 + 恢复时间缩放，
+/// 关卡原样继续（不切场景）。</item>
+/// <item><b>独立场景模式（兜底）</b>：挂在 UI_settings 场景里。返回 = 跳回进来的那个关卡（会重开关卡）。</item>
+/// </list>
+/// 三个按钮：退出游戏 / 退出关卡 / 重新开始；左上角返回箭头。<br/>
+/// 同时支持键盘 1 / 2 / 3。注意：暂停时 <c>Time.timeScale</c> = 0，但 <c>Input.GetKeyDown</c> 依然有效。
 /// </summary>
 public class LevelSettingsUI : MonoBehaviour
 {
@@ -14,6 +17,16 @@ public class LevelSettingsUI : MonoBehaviour
     public KeyCode quitGameKey = KeyCode.Alpha1;    // 退出游戏
     public KeyCode quitLevelKey = KeyCode.Alpha2;   // 退出关卡
     public KeyCode restartKey = KeyCode.Alpha3;     // 重新开始
+
+    /// <summary>宿主关卡 UI；面板模式下非空，独立场景模式下为 null</summary>
+    private LevelUI _owner;
+
+    private void Awake()
+    {
+        // 面板模式：本物体是 LevelUI 预制体的子物体，向上能找到宿主；
+        // 独立场景模式：UI_settings 场景里没有 LevelUI，返回 null，走老的跳场景逻辑。
+        _owner = GetComponentInParent<LevelUI>(true);
+    }
 
     private void Start()
     {
@@ -51,9 +64,20 @@ public class LevelSettingsUI : MonoBehaviour
         LevelUiActions.RestartCurrentLevel();
     }
 
-    /// <summary>左上角返回箭头：回到来源关卡并恢复时间</summary>
+    /// <summary>
+    /// 左上角返回箭头：<br/>
+    /// 面板模式 → 关掉面板并恢复时间缩放，关卡接着原来的进度继续；<br/>
+    /// 独立场景模式 → 跳回来源关卡（会重新加载关卡）。
+    /// </summary>
     public void OnBack()
     {
+        if (_owner != null)
+        {
+            Debug.Log("[设置界面] 返回：关闭面板，关卡原样继续");
+            _owner.CloseSettings();
+            return;
+        }
+
         Debug.Log("[设置界面] 返回关卡 → " + LevelUiActions.RememberedLevelScene);
         LevelUiActions.BackToLevel();
     }

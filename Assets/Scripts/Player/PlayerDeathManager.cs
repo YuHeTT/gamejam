@@ -272,6 +272,9 @@ public class PlayerDeathManager : MonoBehaviour
     /// <summary>重载当前场景，还原到最初始的场景状态</summary>
     private void ReloadScene()
     {
+        //兜底：带着暂停状态重载场景会让新场景整场卡死，切场景前先把时间缩放还回去
+        GamePause.Resume();
+
         Scene active = SceneManager.GetActiveScene();
         if (!active.IsValid())
         {

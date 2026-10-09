@@ -74,6 +74,9 @@ public static class LevelUiSetup
         Debug.Log("[LevelUI] 预制体已生成：" + PrefabPath +
                   "（齿轮 " + levelUi.buttonSize.x + "×" + levelUi.buttonSize.y +
                   " @ 屏幕 (" + x0 + "," + y0 + ")）");
+
+        // 重新生成会把设置面板一起抹掉，所以顺手再建一次，保证"生成预制体"始终得到完整结果
+        SettingsPanelSetup.BuildPanel();
     }
 
     // ---------------------------------------------------------------- 批量注入

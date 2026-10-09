@@ -135,6 +135,10 @@ public class Player : Entity
     #region 跳跃输入检测
     private void CheckJumpInput()
     {
+        // 暂停（设置面板打开）时不接受跳跃输入，否则按 K 会写进缓冲、恢复的瞬间凭空起跳
+        if (GamePause.IsPaused)
+            return;
+
         if(jumpBufferTimer > 0)
             jumpBufferTimer -= Time.deltaTime;
 

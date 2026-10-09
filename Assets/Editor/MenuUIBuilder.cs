@@ -428,6 +428,14 @@ public static class MenuUIBuilder
             AddLevelHitBox(layerByName, "选关-9", "选关-9_new", 8, 1648, 339, 2037, 703);
         }
 
+        // UI_music：三行"条 + 球"要变成音量滑条。
+        // 放在这里是为了"重建场景"时不会把滑条弄丢（否则重新生成一次 UI_music 就得再手工补一遍）。
+        if (scenePath == SceneMusic)
+        {
+            int sliders = MusicSliderSetup.Build(canvas);
+            Debug.Log("[MenuUIBuilder] " + scenePath + " 已生成 " + sliders + " 条音量滑条。");
+        }
+
         SaveScene(scene, scenePath);
     }
 

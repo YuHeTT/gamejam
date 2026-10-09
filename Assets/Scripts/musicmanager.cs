@@ -12,6 +12,92 @@ public class musicmanager : MonoBehaviour
 
     private AudioClip currentbgmclip;
 
+    // ========================================================================
+    //  音量
+    //  设置界面（UI_music）有三条滑条：总音量 / 背景音乐 / 音效。
+    //  实际写进 AudioSource 的是  总音量 × 分项 ：
+    //      bgm.volume  = MasterVolume * BgmVolume
+    //      shot.volume = MasterVolume * ShotVolume
+    //  这样"总音量"拉到 1 时，两条分项的值就等于实际音量，不会莫名其妙减半。
+    //
+    //  值放在 static 里（而不是只挂在实例上），因为设置界面可能先于 musicmanager 存在：
+    //  玩家在主菜单调完音量再进关卡时，关卡里新建的 musicmanager 会读到同一份值。
+    // ========================================================================
+
+    public const float DefaultMasterVolume = 1f;
+    public const float DefaultBgmVolume = 0.5f;
+    public const float DefaultShotVolume = 0.5f;
+
+    private const string PrefKeyMaster = "audio.volume.master";
+    private const string PrefKeyBgm = "audio.volume.bgm";
+    private const string PrefKeyShot = "audio.volume.shot";
+
+    /// <summary>
+    /// 是否用 PlayerPrefs 记住玩家调过的音量。<br/>
+    /// true  = 关掉游戏再打开还是上次的值（首次运行用默认值）；<br/>
+    /// false = 每次启动都回到默认值（总音量 1、背景音乐 0.5、音效 0.5）。
+    /// </summary>
+    public static bool rememberVolume = true;
+
+    // -1 表示"还没读过"，音量本身合法范围是 0~1
+    private static float _masterVolume = -1f;
+    private static float _bgmVolume = -1f;
+    private static float _shotVolume = -1f;
+
+    /// <summary>总音量（0~1），初始 1</summary>
+    public static float MasterVolume
+    {
+        get { return LoadVolume(ref _masterVolume, PrefKeyMaster, DefaultMasterVolume); }
+        set { SaveVolume(ref _masterVolume, PrefKeyMaster, value); ApplyVolumes(); }
+    }
+
+    /// <summary>背景音乐音量（0~1），初始 0.5</summary>
+    public static float BgmVolume
+    {
+        get { return LoadVolume(ref _bgmVolume, PrefKeyBgm, DefaultBgmVolume); }
+        set { SaveVolume(ref _bgmVolume, PrefKeyBgm, value); ApplyVolumes(); }
+    }
+
+    /// <summary>音效音量（0~1），初始 0.5</summary>
+    public static float ShotVolume
+    {
+        get { return LoadVolume(ref _shotVolume, PrefKeyShot, DefaultShotVolume); }
+        set { SaveVolume(ref _shotVolume, PrefKeyShot, value); ApplyVolumes(); }
+    }
+
+    /// <summary>背景音乐 AudioSource 实际使用的音量 = 总音量 × 背景音乐</summary>
+    public static float EffectiveBgmVolume { get { return MasterVolume * BgmVolume; } }
+
+    /// <summary>音效 AudioSource 实际使用的音量 = 总音量 × 音效</summary>
+    public static float EffectiveShotVolume { get { return MasterVolume * ShotVolume; } }
+
+    /// <summary>
+    /// 把当前音量写进 bgm / shot。改音量时自动调用；
+    /// musicmanager 自己 Awake 时也要调一次（实例可能是后创建的）。
+    /// </summary>
+    public static void ApplyVolumes()
+    {
+        if (instance == null) return;
+
+        if (instance.bgm != null) instance.bgm.volume = EffectiveBgmVolume;
+        if (instance.shot != null) instance.shot.volume = EffectiveShotVolume;
+    }
+
+    private static float LoadVolume(ref float cache, string key, float fallback)
+    {
+        if (cache < 0f)
+        {
+            float v = rememberVolume ? PlayerPrefs.GetFloat(key, fallback) : fallback;
+            cache = Mathf.Clamp01(v);
+        }
+        return cache;
+    }
+
+    private static void SaveVolume(ref float cache, string key, float value)
+    {
+        cache = Mathf.Clamp01(value);
+        if (rememberVolume) PlayerPrefs.SetFloat(key, cache);
+    }
 
     void Awake()
     {
@@ -35,6 +121,9 @@ public class musicmanager : MonoBehaviour
         {
             Debug.LogError("[musicmanager] bgm AudioSource 未赋值");
         }
+
+        // 玩家可能在上一个界面就调过音量（那时本实例还不存在），这里补上
+        ApplyVolumes();
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -45,7 +134,7 @@ public class musicmanager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void PlayBGM(int index)

@@ -100,6 +100,10 @@ public class PlayerItemController : MonoBehaviour
 
     private void Update()
     {
+        // 暂停（设置面板打开）时完全不响应输入：否则按 J 仍能拾取/交换，
+        // 按 I/L 仍能使用道具（含「募」的 S 键），暂停界面就形同虚设。
+        if (GamePause.IsPaused) return;
+
         if (player != null && player.IsTeleporting)
         {
             //传送会打断拾取动画，避免道具卡在预览态

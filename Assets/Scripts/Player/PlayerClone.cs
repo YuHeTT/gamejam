@@ -44,12 +44,12 @@ public class PlayerClone : Entity
         rb.velocity = new Vector2(x * moveSpeed, rb.velocity.y);
         FlipController(x);
 
-        //跳跃
-        if (connected && IsGroundDetected() && Input.GetKeyDown(KeyCode.K))
+        //跳跃（暂停时不接受输入，避免恢复的瞬间凭空起跳）
+        if (connected && !GamePause.IsPaused && IsGroundDetected() && Input.GetKeyDown(KeyCode.K))
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
 
         //复刻玩家的「长按 K 跳更高」
-        bool holdingJump = connected && Input.GetKey(KeyCode.K);
+        bool holdingJump = connected && !GamePause.IsPaused && Input.GetKey(KeyCode.K);
         rb.gravityScale = (rb.velocity.y > 0f && !holdingJump)
             ? gravityScale * fallMultiplier
             : gravityScale;
