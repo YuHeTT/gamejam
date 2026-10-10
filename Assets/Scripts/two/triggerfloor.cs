@@ -66,7 +66,10 @@ public class triggerfloor : MonoBehaviour
                 // 原 OnTriggerStay2D 版本不会踩这个坑：触发器回调要求至少一方是非静态刚体。
                 Rigidbody2D body = col.attachedRigidbody;
                 if (body == null) continue;                              // 无刚体：纯静态地形
-                if (body.bodyType == RigidbodyType2D.Static) continue;    // Static 刚体：瓦片地图地形
+                // Static 刚体默认按地形排除（瓦片地图 ground）。但墓碑也是 Static —— 它不参与物理、
+                // 靠 transform 摆位，却被设计成可以参与机关，所以这里给墓碑放行，
+                // 是否真的算数交给下面 MechanismQuery 的开关判断（默认关闭）。
+                if (body.bodyType == RigidbodyType2D.Static && !MechanismQuery.IsTombstone(col)) continue;
 
                 if (!MechanismQuery.CanTriggerPedal(col)) continue;
 

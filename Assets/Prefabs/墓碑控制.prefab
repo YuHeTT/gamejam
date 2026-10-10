@@ -45,4 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tombstonePrefab: {fileID: 7228928262670103366, guid: 16da5955bbe365e458fa107c18cfe2d9, type: 3}
-  placementOffset: {x: 0, y: 0.5}
+  placementOffset: {x: 0, y: 0.3}
+  collideWithPlayer: 0
+  allowAirPlacement: 0
+  movingGroundMask:
+    serializedVersion: 2
+    m_Bits: 0
+  canTriggerPedal: 0
+  canWeighOnBalance: 0
