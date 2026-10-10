@@ -213,7 +213,7 @@ MonoBehaviour:
     m_Bits: 256
   pickUpCooldown: 0.15
   pickUpKey: 106
-  pickUpAnimDuration: 1.2
+  pickUpAnimDuration: 1
   stretchTime: 0.05
   squashTime: 0.1
   returnTime: 0.1
@@ -361,8 +361,8 @@ MonoBehaviour:
   dotSprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   dotColor: {r: 0.5294118, g: 0.80784315, b: 0.92156863, a: 1}
   spacing: 0.6
-  offset: {x: 0, y: 0}
-  dotScale: 0.3
+  offset: {x: 0, y: -0.42}
+  dotScale: 0.2
   sortingOrder: 12
 --- !u!114 &6003876052633709517
 MonoBehaviour:

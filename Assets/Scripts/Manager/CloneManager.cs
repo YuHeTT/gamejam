@@ -14,7 +14,8 @@ public class CloneManager : MonoBehaviour
 
     private static CloneManager _instance;
     private readonly List<PlayerClone> clones = new List<PlayerClone>();
-    private bool connected = true;
+    //连接状态：新召唤出来的复制体默认是「断开」——站着不动，需要按 S 才会模仿玩家
+    private bool connected = false;
 
     /// <summary>场景实例；未手动放置时首次使用时自动创建</summary>
     public static CloneManager Instance
@@ -34,7 +35,7 @@ public class CloneManager : MonoBehaviour
     /// <summary>已存在的实例（不自动创建）</summary>
     public static CloneManager Existing => _instance;
 
-    /// <summary>复制体是否与玩家保持连接（初始为「已连接」）</summary>
+    /// <summary>复制体是否与玩家保持连接（初始为「已断开」）</summary>
     public bool Connected => connected;
     public int CloneCount => clones.Count;
 

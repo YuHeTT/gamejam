@@ -30,6 +30,10 @@ public static class TimeOfDayManager
     /// <summary>应用昼夜表现。玩家 / 场景 / 实体的具体差异效果在此填写。</summary>
     private static void ApplyTimeOfDay(bool night)
     {
+        //夜晚在画面上盖一层暗色滤镜（白天完全透明）。见 NightOverlay：
+        //场上没有手动摆放的实例时会自动创建一份，所以各关卡都不需要额外配置。
+        NightOverlay.Apply(night);
+
         // TODO: 在此接入白天 / 黑夜各自的实际效果（玩家、场景、实体）。
 
         OnTimeChanged?.Invoke(night);
