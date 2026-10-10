@@ -1639,6 +1639,10 @@ PrefabInstance:
       propertyPath: shotclips.Array.data[5]
       value: 
       objectReference: {fileID: 8300000, guid: 5083124201843224faff3409eea55fb2, type: 3}
+    - target: {fileID: 5391898411350876653, guid: 2a682110b18700c48993a053f9210a45, type: 3}
+      propertyPath: shotclips.Array.data[8]
+      value: 
+      objectReference: {fileID: 8300000, guid: 9f195351821955f47a281bdd648a7798, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
