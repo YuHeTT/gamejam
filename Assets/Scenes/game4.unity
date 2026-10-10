@@ -46551,15 +46551,15 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 7fcd613233538764d97542feec732419, type: 3}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.b
-      value: 0.6603774
+      value: 0.2509804
       objectReference: {fileID: 0}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.g
-      value: 0.3960082
+      value: 0.65882355
       objectReference: {fileID: 0}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.r
-      value: 0.22635566
+      value: 0.4666667
       objectReference: {fileID: 0}
     - target: {fileID: 8135310915596724953, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_LocalPosition.x
@@ -47510,7 +47510,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 61f329a656a3d0b4ba8e41f92ec08443, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -55715,7 +55715,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: c23d25dc33eb5194fb1338716ccd97f3, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.044303894, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -55754,15 +55754,15 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 7fcd613233538764d97542feec732419, type: 3}
     - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: m_Color.b
-      value: 0.64779866
+      value: 0.06666667
       objectReference: {fileID: 0}
     - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: m_Color.g
-      value: 0.36427164
+      value: 0.058823533
       objectReference: {fileID: 0}
     - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: m_Color.r
-      value: 0.2016731
+      value: 0.31764707
       objectReference: {fileID: 0}
     - target: {fileID: 514325346145274730, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: triggerfloors.Array.size
