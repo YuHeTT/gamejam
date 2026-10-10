@@ -5361,6 +5361,10 @@ MonoBehaviour:
   trimLineY: NaN
   minRemainHeight: 0.02
   rebuildDelta: 0.01
+  riseShotIndex: 10
+  fallShotIndex: 9
+  moveSoundPitch: 3
+  playMoveSound: 1
   debugLog: 0
 --- !u!1 &8139698477700787944
 GameObject:
@@ -5401,6 +5405,10 @@ MonoBehaviour:
   trimLineY: NaN
   minRemainHeight: 0.02
   rebuildDelta: 0.01
+  riseShotIndex: 10
+  fallShotIndex: 9
+  moveSoundPitch: 3
+  playMoveSound: 1
   debugLog: 0
 --- !u!4 &8392005316069448760
 Transform:
