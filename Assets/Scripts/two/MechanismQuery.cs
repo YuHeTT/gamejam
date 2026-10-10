@@ -14,6 +14,12 @@ public static class MechanismQuery
     /// <summary>该碰撞体是否可以作为天平配重</summary>
     public static bool CanWeighOnBalance(Collider2D col) => IsAllowed(col, false);
 
+    /// <summary>该碰撞体是否属于墓碑。墓碑的刚体是 Static（不参与物理、靠 transform 摆位），
+    /// 而踏板会把 Static 一律当作地形排除，所以踏板要靠这个判断给墓碑放行。
+    /// 注意与踏板的开关配合：放行之后仍由 <see cref="CanTriggerPedal"/> 决定是否算数。</summary>
+    public static bool IsTombstone(Collider2D col)
+        => col != null && col.GetComponentInParent<TombstoneMarker>() != null;
+
     private static bool IsAllowed(Collider2D col, bool forPedal)
     {
         if (col == null) return false;
@@ -24,7 +30,7 @@ public static class MechanismQuery
             return forPedal ? item.canTriggerPedal : item.canWeighOnBalance;
 
         // 墓碑：开关统一放在全局的 TombstoneService 上
-        if (col.GetComponentInParent<TombstoneMarker>() != null)
+        if (IsTombstone(col))
         {
             TombstoneService service = TombstoneService.Instance;
             if (service == null) return false;

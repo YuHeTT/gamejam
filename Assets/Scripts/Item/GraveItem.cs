@@ -12,7 +12,23 @@ public class GraveItem : Item
     [Tooltip("抛出时附加的向上速度。0 就是严格的平抛（初速纯水平）")]
     public float throwSpeedY = 3f;
 
+    [Header("拾取时销毁 TMP（可选）")]
+    [Tooltip("勾选：本实例被拾取时销毁下面指定的物体（一般用来消掉屏幕上的提示文字）")]
+    public bool destroyTmpOnPickUp = false;
+    [Tooltip("被拾取时要销毁的物体：把场景里的 TextMeshPro 文本对象拖进来")]
+    public GameObject tmpToDestroy;
+
     public override KeyCode useKey => KeyCode.S;
+
+    /// <summary>拾取动画开始的瞬间：按需销毁指定的 TMP 物体。
+    /// 放在这里而不是 OnPickUp，是为了让勾了「拒绝拾取」的假道具也能生效。</summary>
+    public override void OnPickUpStart(Player player)
+    {
+        if (!destroyTmpOnPickUp || tmpToDestroy == null) return;
+
+        Destroy(tmpToDestroy);
+        tmpToDestroy = null;   //同一实例可以被反复拾取，这里清引用避免重复销毁
+    }
 
     /// <summary>「墓」的假道具模式：动画播完后不生效，而是被随机平抛出去，玩家永远拿不到它的能力。</summary>
     public override bool TryRejectPickUp(Player player)

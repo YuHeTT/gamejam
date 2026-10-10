@@ -113,6 +113,10 @@ public class Item : MonoBehaviour
     /// 子类通常在这里把道具抛回世界（例如"墓"把它扔出去，玩家永远拿不到能力）。</summary>
     public virtual bool TryRejectPickUp(Player player) => false;
 
+    /// <summary>拾取动画开始的那一刻触发（此时道具已被判定为"被拾取"，但还没正式生效）。<br/>
+    /// 与 <see cref="OnPickUp"/> 的区别：这里不看这次拾取最后是否真的收下，所以勾了拒绝拾取的道具也照样触发。</summary>
+    public virtual void OnPickUpStart(Player player) { }
+
     /// <summary>按 I 使用能力。返回 true 表示该道具被消耗（从槽位移除并销毁）</summary>
     public virtual bool UseAbility(Player player) => false;
 
@@ -172,6 +176,8 @@ public class Item : MonoBehaviour
         if (rb  != null) rb.simulated = false;
         if (col != null) col.enabled  = false;
         if (sr  != null) sr.enabled   = true;
+
+        OnPickUpStart(player);   //拾取瞬间的即时反应（子类可重写）
     }
 
     /// <summary>拾取动画结束：正式生效，触发 OnPickUp（图像转回"持有中"的隐藏状态）</summary>
