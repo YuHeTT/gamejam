@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -5,8 +6,8 @@ using UnityEngine;
 /// 只改 X，Y 与 Z 保持不动；用 MoveTowards 保证严格匀速、不会过冲。<br/><br/>
 /// 摆放约定：物体<b>当前 X</b> 默认作为左端点，右端点由 <see cref="rightBound"/> 指定。
 /// 如果要用明确的绝对范围（例如左 30、右 37），勾上 <see cref="useCustomBounds"/> 再填两个值。<br/><br/>
-/// 注意：本组件只驱动 Transform，不负责"玩家站在上面能被带着走"——
-/// 那取决于玩家的碰撞体与刚体设置（以及平台所在层是否为玩家的 Ground 层）。
+/// 勾选 <see cref="carryRiders"/> 后，会把站在平台顶面上的物体（主要是玩家）一起带着走，
+/// 物体跳跃或走出平台即自动脱离（与 <see cref="updown"/> 的水平承载逻辑一致）。
 /// </summary>
 [DisallowMultipleComponent]
 public class movestair : MonoBehaviour
@@ -30,6 +31,16 @@ public class movestair : MonoBehaviour
     [Tooltip("到达每个端点后停留的秒数")]
     public float waitTime = 1f;
 
+    [Header("承载（吸附玩家）")]
+    [Tooltip("勾选后平台移动时会把站在平台顶面上的物体（主要是玩家）一起带着走；物体跳跃或走出平台后自动脱离")]
+    public bool carryRiders = true;
+    [Tooltip("承载探测盒的厚度（米）：平台顶面以上这个厚度内、且脚底贴面的物体会被带走")]
+    public float carryDetectHeight = 0.4f;
+    [Tooltip("脚底低于平台顶面多少以内算“站在上面”（米），用于排除从上方飞过的物体")]
+    public float carryFootTolerance = 0.15f;
+    [Tooltip("承载对象的层掩码，保持 Everything 即可（脚本会自行过滤掉静态/无刚体对象）")]
+    public LayerMask carryMask = ~0;
+
     [Header("调试")]
     [Tooltip("在 Scene 视图画出巡逻起止位置")]
     public bool drawGizmos = true;
@@ -47,8 +58,21 @@ public class movestair : MonoBehaviour
     // 因为它会随着移动持续靠近目标，导致加减号在接近时翻转）
     private float _targetCenterX;
 
+    // 承载探测：复用的查询容器，避免每帧分配
+    private Collider2D _platformCollider;
+    private readonly Collider2D[] _riderBuffer = new Collider2D[8];
+    private ContactFilter2D _riderFilter;
+    private readonly List<Rigidbody2D> _processedRiders = new List<Rigidbody2D>();
+
     private void Awake()
     {
+        _platformCollider = GetComponent<Collider2D>();
+
+        _riderFilter = new ContactFilter2D();
+        _riderFilter.useTriggers = false;
+        _riderFilter.useLayerMask = true;
+        _riderFilter.layerMask = carryMask;
+
         // 默认：物体当前 X = 左端点，rightBound = 右端点
         _xMin = useCustomBounds ? leftBound : transform.position.x;
         _xMax = rightBound;
@@ -95,6 +119,13 @@ public class movestair : MonoBehaviour
 
         Vector3 pos = transform.position;
         pos.x = Mathf.MoveTowards(pos.x, targetTransformX, moveSpeed * Time.deltaTime);
+
+        // 先把站在平台顶面上的物体按同样的位移带走，再移动平台本身（相对位置保持不变）。
+        // 只按逐帧位移搬运：物体跳跃/走出平台后下一帧就探测不到，自然脱离，无需额外解绑。
+        Vector3 delta = pos - transform.position;
+        if (carryRiders && delta.sqrMagnitude > 0f)
+            CarryRiders(delta);
+
         transform.position = pos;
 
         // 到达端点：开始停留
@@ -127,6 +158,67 @@ public class movestair : MonoBehaviour
     private void RefreshTargetCenter()
     {
         _targetCenterX = ToTransformX(_targetX);
+    }
+
+    /// <summary>
+    /// 把"站在平台顶面上的物体"按同样的位移一起带走（主要是玩家）。<br/>
+    /// 只处理带 Dynamic 刚体的物体（玩家、箱子等），平台自己与静态/运动学物体不动。<br/>
+    /// 因为搬运量就是平台本帧的位移，所以玩家用自身速度跳跃或走出平台后，
+    /// 下一帧便不再落在探测盒内 → 自动脱离，不需要额外的解绑逻辑。<br/>
+    /// 注意：玩家速度由输入直接赋值（<see cref="Player.HorizontalMoveController"/>），
+    /// 单纯给速度加平台分量会被覆盖，所以这里改的是刚体位置而不是速度。
+    /// </summary>
+    private void CarryRiders(Vector3 delta)
+    {
+        if (!TryGetPlatformBounds(out Bounds pb)) return;
+
+        float h = Mathf.Max(0.05f, carryDetectHeight);
+        float top = pb.max.y;
+
+        // 探测盒：紧贴平台顶面之上，宽度与平台一致
+        Vector2 center = new Vector2(pb.center.x, top + h * 0.5f);
+        Vector2 size = new Vector2(Mathf.Max(0.05f, pb.size.x), h);
+
+        int count = Physics2D.OverlapBox(center, size, 0f, _riderFilter, _riderBuffer);
+
+        _processedRiders.Clear();
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D col = _riderBuffer[i];
+            if (col == null || col == _platformCollider) continue;
+
+            Rigidbody2D body = col.attachedRigidbody;
+            if (body == null || body.bodyType != RigidbodyType2D.Dynamic) continue;
+            if (body.transform.IsChildOf(transform)) continue;      // 平台自己的子物体不搬
+            if (_processedRiders.Contains(body)) continue;          // 同一刚体的多个碰撞体只搬一次
+
+            // 脚底必须贴着平台顶面，才算"站在上面"（排除从上方飞过的物体）
+            if (col.bounds.min.y > top + carryFootTolerance) continue;
+
+            _processedRiders.Add(body);
+            body.position += (Vector2)delta;
+        }
+    }
+
+    /// <summary>取平台碰撞体的世界包围盒；没有碰撞体时退回 SpriteRenderer 的包围盒</summary>
+    private bool TryGetPlatformBounds(out Bounds bounds)
+    {
+        if (_platformCollider != null)
+        {
+            bounds = _platformCollider.bounds;
+            return true;
+        }
+
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            bounds = sr.bounds;
+            return true;
+        }
+
+        bounds = default;
+        return false;
     }
 
     /// <summary>取碰撞体半宽（世界单位）；没有碰撞体时用 SpriteRenderer 半宽兜底，再不行用 0</summary>
