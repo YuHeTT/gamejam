@@ -3095,6 +3095,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: allowAirPlacement
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: movingGroundMask.m_Bits
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 8522119880287629884, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: m_LocalPosition.x
       value: 52.627758

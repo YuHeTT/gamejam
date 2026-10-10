@@ -5,12 +5,31 @@ using UnityEngine;
 /// 该道具不会被消耗。</summary>
 public class SummonItem : Item
 {
+    [Header("第二个复制体的警报音乐（可选）")]
+    [Tooltip("勾选：玩家召唤出第 2 个复制体的瞬间，立刻中断背景音乐，并循环播放下面的音频（音量 = 背景音乐音量 × 2），" +
+             "直到离开本场景（退出 / 过关 / 重开都算）")]
+    public bool panicBgmOnSecondClone = false;
+    [Tooltip("第二个复制体出现后，循环播放的音频片段")]
+    public AudioClip secondCloneLoopClip;
+
+    // 本实例只触发一次：第 3 个复制体出现时不再重播
+    private bool _panicTriggered;
+
     /// <summary>「募」的使用键是 L</summary>
     public override KeyCode useKey => KeyCode.L;
 
     public override bool UseAbility(Player player)
     {
-        CloneManager.Instance.TrySummon();
+        bool summoned = CloneManager.Instance.TrySummon();
+
+        // 第 2 个复制体刚出现 → 触发警报音乐
+        if (summoned && panicBgmOnSecondClone && !_panicTriggered
+            && CloneManager.Instance.CloneCount >= 2)
+        {
+            _panicTriggered = true;
+            musicmanager.PlayInterruptLoop(secondCloneLoopClip, 2f);
+        }
+
         return false;   //不消耗，保持持有
     }
 

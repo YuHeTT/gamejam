@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class musicmanager : MonoBehaviour
 {
@@ -86,6 +87,10 @@ public class musicmanager : MonoBehaviour
         // 变速音效用的独立音源（用到才创建，可能还不存在）
         if (instance._pitchShot != null) instance._pitchShot.volume = EffectiveShotVolume;
         if (instance._walkShot != null) instance._walkShot.volume = EffectiveShotVolume;
+
+        // 中断循环音乐（「募」的警报）：跟随背景音乐音量并保持倍数
+        if (instance._interruptLoop != null)
+            instance._interruptLoop.volume = EffectiveBgmVolume * instance._interruptVolumeMultiplier;
     }
 
     private static float LoadVolume(ref float cache, string key, float fallback)
@@ -277,6 +282,11 @@ public class musicmanager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // 换场景（退出 / 过关 / 重开）时收尾"中断循环音乐"：停掉它并恢复原背景音乐。
+            // 先 -= 再 +=，避免重复实例或重进播放模式时重复订阅。
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
         }
         else
         {
@@ -347,6 +357,103 @@ public class musicmanager : MonoBehaviour
             bgm.Play();
         }
         // 同一首且正在播放：直接忽略，避免重复调用时把音乐从头打断
+    }
+
+    // ========================================================================
+    //  中断循环音乐
+    //  「募」召唤出第 2 个复制体时的警报：立刻中断背景音乐，改播一段循环音频，
+    //  直到离开本场景（退出 / 过关 / 重开）才停止，并恢复原来的背景音乐。
+    //  用独立音源播放，这样停它 / 恢复它都不会碰到 bgm 上其它状态。
+    // ========================================================================
+    private AudioSource _interruptLoop;
+    private bool _interruptActive;
+    private float _interruptVolumeMultiplier = 1f;
+    private AudioClip _bgmClipBeforeInterrupt;
+
+    private AudioSource InterruptLoopSource
+    {
+        get
+        {
+            if (_interruptLoop != null) return _interruptLoop;
+
+            GameObject go = new GameObject("bgm_interrupt");
+            go.transform.SetParent(transform, false);
+
+            _interruptLoop = go.AddComponent<AudioSource>();
+            _interruptLoop.playOnAwake = false;
+            _interruptLoop.loop = true;
+            _interruptLoop.spatialBlend = 0f;
+
+            if (bgm != null)
+            {
+                _interruptLoop.outputAudioMixerGroup = bgm.outputAudioMixerGroup;
+                _interruptLoop.ignoreListenerPause = bgm.ignoreListenerPause;
+                _interruptLoop.priority = bgm.priority;
+            }
+
+            return _interruptLoop;
+        }
+    }
+
+    /// <summary>
+    /// 立刻中断背景音乐，并以 <paramref name="volumeMultiplier"/> 倍于背景音乐音量的音量循环播放指定片段。<br/>
+    /// 播放会一直持续到离开本场景（退出 / 过关 / 重开都算），届时自动停止并恢复原背景音乐。<br/>
+    /// musicmanager 不在场或片段为空时安全忽略。
+    /// </summary>
+    public static void PlayInterruptLoop(AudioClip clip, float volumeMultiplier = 2f)
+    {
+        if (instance == null)
+        {
+            Debug.LogWarning("[musicmanager] 实例不存在，无法播放中断循环音乐");
+            return;
+        }
+
+        if (clip == null)
+        {
+            Debug.LogWarning("[musicmanager] 中断循环音乐的片段为空，已忽略");
+            return;
+        }
+
+        instance.PlayInterruptLoopInternal(clip, volumeMultiplier);
+    }
+
+    private void PlayInterruptLoopInternal(AudioClip clip, float volumeMultiplier)
+    {
+        // 第一次进入中断时记下正在播的背景音乐，离开场景后好还原；
+        // 中断期间被再次调用（例如又召唤出复制体）只换片段，不覆盖这份记录。
+        if (!_interruptActive && bgm != null)
+            _bgmClipBeforeInterrupt = bgm.clip;
+
+        _interruptActive = true;
+        _interruptVolumeMultiplier = Mathf.Max(0f, volumeMultiplier);
+
+        if (bgm != null) bgm.Stop();    // 立刻中断背景音乐
+
+        AudioSource src = InterruptLoopSource;
+        src.clip = clip;
+        src.loop = true;
+        src.volume = EffectiveBgmVolume * _interruptVolumeMultiplier;
+        src.Play();
+    }
+
+    /// <summary>离开本场景：停止中断循环，并恢复中断前的背景音乐</summary>
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!_interruptActive) return;
+
+        _interruptActive = false;
+
+        if (_interruptLoop != null) _interruptLoop.Stop();
+
+        if (bgm != null && _bgmClipBeforeInterrupt != null)
+        {
+            bgm.clip = _bgmClipBeforeInterrupt;
+            bgm.loop = true;
+            bgm.Play();
+        }
+
+        _bgmClipBeforeInterrupt = null;
+        _interruptVolumeMultiplier = 1f;
     }
 
     /// <summary>原速播放音效（等价于 pitch = 1）</summary>

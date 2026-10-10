@@ -1850,11 +1850,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: canTriggerPedal
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: allowAirPlacement
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: canWeighOnBalance
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: placementOffset.y

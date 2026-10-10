@@ -126,6 +126,12 @@ public class PlayerDeathManager : MonoBehaviour
         //先用黑屏挡住游戏画面（视频层在黑色遮罩之上，因此视频仍会显示在最前）
         SetCoverY(0f);
 
+        //保证视频播放期间背景音乐不中断：VideoPlayer 的 Direct 音频输出会绕开 Unity 音频系统，
+        //在部分平台（尤其 Windows）开始播放时会重置音频输出，把正在播的背景音乐一起掐掉。
+        //这里记下进入时的播放状态，循环里检测到被停就补播，让音乐整段视频都不断。
+        AudioSource bgm = musicmanager.instance != null ? musicmanager.instance.bgm : null;
+        bool keepBgmAlive = bgm != null && bgm.isPlaying;
+
         EnsureVideoTexture();
         videoImage.texture        = videoRT;
         videoPlayer.targetTexture = videoRT;
@@ -141,6 +147,10 @@ public class PlayerDeathManager : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
             if (videoPlayer.isPlaying) started = true;
+
+            //背景音乐被视频输出打断则补播（只在真的停了时调一次 Play，不重复打断）
+            if (keepBgmAlive && !bgm.isPlaying)
+                bgm.Play();
 
             //视频播放结束 → 退出
             if (started && !videoPlayer.isPlaying) break;
