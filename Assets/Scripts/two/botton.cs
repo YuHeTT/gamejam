@@ -17,6 +17,9 @@ public class botton : MonoBehaviour
     private Vector3 openedPosition;
     private Vector3 targetPosition;
 
+    // 踩按钮音效的边沿判断：OnTriggerStay2D 每帧都会回调，不判边沿会疯狂重复播放
+    private bool _pressed;
+
     private void Awake()
     {
         if (door == null)
@@ -47,12 +50,21 @@ public class botton : MonoBehaviour
     {
         //道具/墓碑默认不参与：与 triggerfloor、PlatformSensor 用同一套过滤规则
         if (!MechanismQuery.CanTriggerPedal(collision)) return;
+
+        // 踩上去的那一刻播一次音效（元素8「踩压力板音效」），与踏板用同一个
+        if (!_pressed)
+        {
+            _pressed = true;
+            musicmanager.PlayShotSound(musicmanager.ShotIndexPressurePlate);
+        }
+
         opendoor();
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (!MechanismQuery.CanTriggerPedal(collision)) return;
+        _pressed = false;
         Invoke("closedoor", 1f); 
     }
 

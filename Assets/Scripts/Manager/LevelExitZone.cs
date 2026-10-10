@@ -56,6 +56,12 @@ public class LevelExitZone : MonoBehaviour
         }
 
         triggered = true;
+
+        // 通关音效（元素0「你过关音效」）。
+        // 放在 LoadScene 之前：musicmanager 是 DontDestroyOnLoad，音效源不会随场景销毁，
+        // 所以切到下一关之后这个音效会继续播完，不会被掐断。
+        musicmanager.PlayShotSound(musicmanager.ShotIndexLevelClear);
+
         SceneManager.LoadScene(next);
     }
 }

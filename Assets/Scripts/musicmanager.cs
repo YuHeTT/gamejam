@@ -141,6 +141,12 @@ public class musicmanager : MonoBehaviour
     /// <summary>UI 按钮点击音效 = shotclips 的 Element 5「点击音效」</summary>
     public const int ShotIndexUiClick = 5;
 
+    /// <summary>踩压力板 / 踩按钮音效 = shotclips 的 Element 8「踩压力板音效」</summary>
+    public const int ShotIndexPressurePlate = 8;
+
+    /// <summary>通关音效 = shotclips 的 Element 0「你过关音效」</summary>
+    public const int ShotIndexLevelClear = 0;
+
     /// <summary>
     /// 播放音效。<br/>
     /// <paramref name="index"/> = Inspector 里 shotclips 的 Element 序号（从 0 开始）；<br/>

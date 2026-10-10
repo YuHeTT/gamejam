@@ -28,6 +28,10 @@ public class triggerfloor : MonoBehaviour
 
     private ContactFilter2D _filter;
 
+    // 踩压力板音效的边沿判断：只在"从没踩到踩上"的那一刻播一次
+    // （isPlayerOnFloor 是每帧轮询出来的结果，不判边沿会每帧都播）
+    private bool _wasPressed;
+
     private void Awake()
     {
         _area = GetComponentInChildren<Collider2D>();
@@ -79,5 +83,12 @@ public class triggerfloor : MonoBehaviour
         }
 
         isPlayerOnFloor = any;
+
+        // 踩上去的那一刻播一次音效（元素8「踩压力板音效」）。
+        // 只是加了个音效，不参与任何判定，踩上去/离开的行为与以前完全一致。
+        if (any && !_wasPressed)
+            musicmanager.PlayShotSound(musicmanager.ShotIndexPressurePlate);
+
+        _wasPressed = any;
     }
 }
