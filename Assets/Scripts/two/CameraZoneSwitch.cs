@@ -174,14 +174,27 @@ public class CameraZoneSwitch : MonoBehaviour
         _armed = true;
     }
 
-    /// <summary>正 = 切过去（去程），负 = 回切（回程）。速度太小则用玩家在判定区哪一侧判断。</summary>
+    /// <summary>正 = 切过去（去程），负 = 回切（回程）。</summary>
     private bool EvaluateForward(Player player)
     {
+        // 去程方向由锚点决定：cameraIn 相对出发位（cameraOut）的位移符号。
+        // 不能假设去程一定朝 +X/+Y —— 从右向左设计的关卡去程方向就是负的。
+        float dirIn = DirectionOfForward;
+
         Vector2 v = player.rb.velocity;
         float axisSpeed = (axis == SwitchAxis.Horizontal) ? v.x : v.y;
 
+        if (Mathf.Abs(dirIn) < 0.0001f)
+        {
+            //cameraIn 与出发位重合，无法据锚点判断去程方向（一般是锚点没配）
+            Debug.LogWarning("CameraZoneSwitch: " + name +
+                " 的 cameraIn 与 cameraOut/相机初始位置在同一侧，无法判断去程方向，暂按沿轴正向移动处理。", this);
+            return axisSpeed >= 0f;
+        }
+
+        //速度够大：直接看速度是否沿"去程方向"（与 dirIn 同号即为去程）
         if (Mathf.Abs(axisSpeed) >= minSpeedForDirection)
-            return axisSpeed > 0f;
+            return axisSpeed * dirIn > 0f;
 
         //速度过小时（例如被水平移动平台驮着穿过判定区，玩家自身速度接近 0）改用位置判断。
         //去程是朝 cameraIn 那一屏走，所以"从出发侧进入"才算去程：玩家的相对位置与去程方向异号。
@@ -190,15 +203,6 @@ public class CameraZoneSwitch : MonoBehaviour
         Vector3 center = (_zone != null) ? (Vector3)_zone.bounds.center : transform.position;
         Vector3 p = player.transform.position;
         float delta = (axis == SwitchAxis.Horizontal) ? p.x - center.x : p.y - center.y;
-
-        float dirIn = DirectionOfForward;
-        if (Mathf.Abs(dirIn) < 0.0001f)
-        {
-            //cameraIn 与出发位在同一条线上，无法据锚点判断去程方向（一般是锚点没配）
-            Debug.LogWarning("CameraZoneSwitch: " + name +
-                " 的 cameraIn 与 cameraOut/相机初始位置在同一侧，无法用位置判断方向，暂按速度正负处理。", this);
-            return axisSpeed >= 0f;
-        }
 
         return delta * dirIn < 0f;
     }
