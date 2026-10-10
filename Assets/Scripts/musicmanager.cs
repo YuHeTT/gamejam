@@ -145,7 +145,7 @@ public class musicmanager : MonoBehaviour
         instance.PlayShotInternal(index, pitch);
     }
 
-    /// <summary>播放墓碑传送用的随机死亡音效。片段放在 Resources/DeathSounds 中。</summary>
+    /// <summary>播放随机死亡音效（悬崖死亡、特殊死亡或墓碑重生）。片段放在 Resources/DeathSounds 中。</summary>
     public static void PlayRandomDeathSound()
     {
         if (instance == null || instance.shot == null) return;

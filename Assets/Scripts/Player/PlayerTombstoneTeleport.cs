@@ -77,6 +77,7 @@ public class PlayerTombstoneTeleport : MonoBehaviour
             return;
 
         IsTeleporting = true;
+        //传送序列真正开始时播放死亡音效：主动传送和死亡重生共用此入口。
         musicmanager.PlayRandomDeathSound();
         Vector2 feetTarget = TombstoneService.Instance.GetTeleportFeetPosition();
 

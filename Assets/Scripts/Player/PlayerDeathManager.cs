@@ -81,6 +81,7 @@ public class PlayerDeathManager : MonoBehaviour
         //特殊判定区：全屏播视频，退出后正常重启场景（优先于墓碑重生）
         if (zone != null && zone.playVideoOnDeath && zone.deathVideo != null)
         {
+            musicmanager.PlayRandomDeathSound();
             StartCoroutine(VideoDeathRoutine(zone));
             return;
         }
@@ -89,10 +90,19 @@ public class PlayerDeathManager : MonoBehaviour
         if (TombstoneService.Instance != null && TombstoneService.Instance.HasActiveTombstone)
         {
             PlayerTombstoneTeleport teleport = player.TombstoneTeleport;
-            if (teleport != null) teleport.BeginEmergeOnly();
-            return;
+            if (teleport != null)
+            {
+                //判定区可能连续触发；传送已经开始时不重复播放死亡音效。
+                if (teleport.IsTeleporting)
+                    return;
+
+                if (teleport.BeginEmergeOnly())
+                    return;
+            }
         }
 
+        //悬崖等普通死亡：播放一次后进入黑屏重载流程。
+        musicmanager.PlayRandomDeathSound();
         StartCoroutine(DeathRoutine());
     }
 
