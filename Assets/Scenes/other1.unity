@@ -894,6 +894,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 7fcd613233538764d97542feec732419, type: 3}
+    - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
+      propertyPath: m_Color.b
+      value: 0.6156863
+      objectReference: {fileID: 0}
+    - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
+      propertyPath: m_Color.g
+      value: 0.3529412
+      objectReference: {fileID: 0}
+    - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
+      propertyPath: m_Color.r
+      value: 0.28627452
+      objectReference: {fileID: 0}
     - target: {fileID: 514325346145274730, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: triggerfloors.Array.size
       value: 2
