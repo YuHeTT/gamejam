@@ -238,4 +238,22 @@ public class BalanceElevator : MonoBehaviour
 
     /// <summary>天平是否处于水平位</summary>
     public bool IsLevel { get { return Mathf.Approximately(offset, 0f); } }
+
+    /// <summary>
+    /// 两侧是否已配平：质量差落在 <see cref="massDeadZone"/> 内，
+    /// 且天平已经停回水平位（offset 归零）。<br/><br/>
+    /// 这是给外部（例如 <c>BalanceVictoryTrigger</c>）用的只读信号，
+    /// 不参与也不改变本脚本的任何原有行为。
+    /// </summary>
+    public bool IsBalanced
+    {
+        get
+        {
+            return Mathf.Abs(_filteredLeftMass - _filteredRightMass) <= Mathf.Max(0f, massDeadZone)
+                   && Mathf.Abs(offset) <= 0.02f;
+        }
+    }
+
+    /// <summary>两侧的质量差（左 − 右，已平滑）</summary>
+    public float WeightDifference { get { return _filteredLeftMass - _filteredRightMass; } }
 }
