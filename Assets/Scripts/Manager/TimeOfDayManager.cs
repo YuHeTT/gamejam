@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>全局昼夜状态（默认白天）。<br/>
 /// 拾取「暮」→ 黑夜；丢弃「暮」→ 白天。<br/>
@@ -40,5 +41,16 @@ public static class TimeOfDayManager
     {
         IsNight = false;
         OnTimeChanged = null;
+
+        //重新加载关卡（死亡重开、重进关卡）不会重置静态字段，需要在每次场景加载后把昼夜复位成白天，
+        //否则上一局的"黑夜"会被带到新一局。这里挂一次场景加载回调（静态事件跨场景存活，不会重复累积）。
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    /// <summary>场景加载完成：把昼夜复位成默认的白天（本来就是白天时无操作）</summary>
+    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        SetNight(false);
     }
 }

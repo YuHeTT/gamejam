@@ -207,7 +207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1030243420697749686}
   pickUpCheck: {fileID: 3421050216489664957}
-  pickUpRadius: 1.2
+  pickUpRadius: 0.77
   whatIsItem:
     serializedVersion: 2
     m_Bits: 256
@@ -217,10 +217,10 @@ MonoBehaviour:
   stretchTime: 0.05
   squashTime: 0.1
   returnTime: 0.1
-  stretchScaleX: 0.49
-  stretchScaleY: 1.69
-  squashScaleX: 1.55
-  squashScaleY: 0.62
+  stretchScaleX: 0.3
+  stretchScaleY: 1.88
+  squashScaleX: 1.64
+  squashScaleY: 0.54
   holdHeight: 1.2
   holdOffset: {x: 0, y: 0.27}
   previewSortingOrder: 20
@@ -410,7 +410,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   itemController: {fileID: 0}
-  visualScale: {x: 2, y: 2}
   debugLog: 0
 --- !u!1 &8192718022542724677
 GameObject:
@@ -468,7 +467,7 @@ Transform:
   m_GameObject: {fileID: 8746582911086962307}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.29, z: 0}
+  m_LocalPosition: {x: 0, y: -0.44, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -185,7 +185,19 @@ public class PlatformSensor : MonoBehaviour
             _candidates[i].accepted = false;
 
         Bounds platformBounds = _area.bounds;
-        float supportY = platformBounds.max.y;
+
+        // 这里必须区分两个不同的"高度基准"，以前它们被合并成 supportY 一个变量，导致同层只能算一个物体：
+        //   platformTopY：固定的"平台顶面"，只用来判断"物体是不是埋在平台下方"（排除地面/墙体等地形）。
+        //   supportY    ：会随已接受物体升高的"当前支撑面"，只用来判断"能不能从支撑面往上够到"（堆叠）。
+        //
+        // 旧写法下限也用 supportY：接受第一个物体后 supportY 立刻被抬到它的顶面（第 210 行），
+        // 继续用新的 supportY 判定同一层的其他物体时，它们的底面（贴着平台顶面）就满足
+        //   minY < supportY - platformEmbedTolerance
+        // 被误判成"埋在平台下面"而全部拒绝 ⇒ 同一块平台上永远只计一个物体的重量。
+        // 玩家与分身是同一坐标、同一层（CloneManager 生成时完全重合且互相忽略碰撞），
+        // 所以正好表现为"玩家+两个分身没箱子重""1 个玩家和 2 个玩家一样重"。
+        float platformTopY = platformBounds.max.y;
+        float supportY = platformTopY;
         float supportMinX = platformBounds.min.x;
         float supportMaxX = platformBounds.max.x;
 
@@ -198,8 +210,9 @@ public class PlatformSensor : MonoBehaviour
                 BodyInfo candidate = _candidates[i];
                 if (candidate.accepted) continue;
 
-                // 上下都限制：底部明显低于平台的地面支撑物不会被接受。
-                if (candidate.minY < supportY - Mathf.Max(0f, platformEmbedTolerance)) continue;
+                // 下限：以固定的平台顶面为基准，排除埋在平台下方的地面支撑物。
+                if (candidate.minY < platformTopY - Mathf.Max(0f, platformEmbedTolerance)) continue;
+                // 上限：以当前支撑面为基准，只接受"从支撑面往上连通"的物体（垂直堆叠照常成立）。
                 if (candidate.minY > supportY + Mathf.Max(0f, stackTolerance)) continue;
 
                 float overlap = Mathf.Min(candidate.maxX, supportMaxX) - Mathf.Max(candidate.minX, supportMinX);

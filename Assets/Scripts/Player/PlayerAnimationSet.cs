@@ -9,9 +9,9 @@ using UnityEngine;
 /// 这几段动画换成道具槽位里的片段。<br/><br/>
 /// 复制体会跟随玩家一起换装；换控制器会重置 Animator 参数，这里按当前状态把动画布尔重新置位，
 /// 避免出现“正在跑却播静止”。<br/><br/>
-/// 另外：道具动画组和举起动画用的是同一套画风偏小的素材，所以持有道具期间还会按
-/// <see cref="visualScale"/> 放大角色视觉（与 PlayerItemController.pickUpScaleFix 保持一致），
-/// 空手时自动还原。
+/// 另外：道具动画组和举起动画用的是同一套画风偏小的素材，所以持有道具期间还会对角色视觉
+/// 施加该道具自己的<b>视觉修正</b>（缩放 + 偏移，见 <see cref="ItemAnimationSet"/> 上的
+/// visualScale / visualOffset），空手时自动还原。每个道具的素材大小不一致，所以修正值逐个道具单独调。
 /// </summary>
 [DisallowMultipleComponent]
 public class PlayerAnimationSet : MonoBehaviour
@@ -22,11 +22,6 @@ public class PlayerAnimationSet : MonoBehaviour
     [Tooltip("道具控制器，留空自动向上查找")]
     public PlayerItemController itemController;
 
-    [Header("变身后的视觉缩放")]
-    [Tooltip("持有道具（即播放该道具的动画组）时，对角色视觉施加的缩放，用来和举起动画的 pickUpScaleFix 对齐。" +
-             "(1,1) 表示不缩放")]
-    public Vector2 visualScale = new Vector2(2f, 2f);
-
     [Header("调试")]
     [Tooltip("打印动画组套用/回退的日志，排查用")]
     public bool debugLog = false;
@@ -35,8 +30,12 @@ public class PlayerAnimationSet : MonoBehaviour
     private RuntimeAnimatorController defaultController;
     // 视觉子物体的原始缩放，缩放修正一律以它为基准（翻转是根物体转 180°，不影响这个值）
     private Vector3 baseVisualScale = Vector3.one;
-    // 当前道具是否真的提供了动画组：决定要不要施加 visualScale
+    // 视觉子物体的原始位置，偏移修正一律以它为基准（翻转时 localPosition 自动镜像）
+    private Vector3 baseVisualPosition = Vector3.zero;
+    // 当前道具是否真的提供了动画组：决定要不要施加视觉修正
     private bool itemSetActive;
+    // 当前生效的道具动画组（视觉修正也从这里取），空手时为 null
+    private ItemAnimationSet activeSet;
 
     // 每个道具只构建一次覆盖控制器，避免反复 new 造成泄漏
     private readonly Dictionary<Item, AnimatorOverrideController> overrideCache
@@ -50,8 +49,9 @@ public class PlayerAnimationSet : MonoBehaviour
         anim = GetComponentInChildren<Animator>();
         if (anim != null)
         {
-            defaultController = anim.runtimeAnimatorController;
-            baseVisualScale   = anim.transform.localScale;   // 原始视觉缩放
+            defaultController  = anim.runtimeAnimatorController;
+            baseVisualScale    = anim.transform.localScale;      // 原始视觉缩放
+            baseVisualPosition = anim.transform.localPosition;   // 原始视觉位置
         }
 
         ResolveRefs();
@@ -86,6 +86,8 @@ public class PlayerAnimationSet : MonoBehaviour
     public void Apply(Item item)
     {
         itemSetActive = item != null && HasAnyClip(item.animationClips);
+        // 视觉修正跟当前道具走：每个道具的素材大小/位置不一样，各调各的
+        activeSet = itemSetActive ? item.animationClips : null;
 
         if (defaultController == null)
         {
@@ -105,20 +107,21 @@ public class PlayerAnimationSet : MonoBehaviour
     }
 
     /// <summary>
-    /// 每帧兜底视觉缩放：拾取动画期间由 PlayerItemController 驱动（它要做 Q 弹形变）这里让位；
-    /// 其余时候强制回"变身后"的缩放。用 LateUpdate 而不是只在换装时设一次，是因为
-    /// 取消拾取、交换道具等路径会把缩放还原成默认值，需要重新顶回去。
+    /// 每帧兜底视觉修正（缩放 + 偏移）：拾取动画期间由 PlayerItemController 驱动（它要做 Q 弹形变）这里让位；
+    /// 其余时候强制回"变身后"的修正值。用 LateUpdate 而不是只在换装时设一次，是因为
+    /// 取消拾取、交换道具等路径会把修正还原成默认值，需要重新顶回去。
     /// </summary>
     private void LateUpdate()
     {
-        Vector3 target = TargetVisualScale;
+        Vector3 targetScale    = TargetVisualScale;
+        Vector3 targetPosition = TargetVisualPosition;
 
-        //复制体也要跟着缩放：CloneManager 只在生成时抄过一次玩家视觉的 localScale，
-        //不主动同步的话，切回原始角色后复制体会一直停在变身时的放大值。
+        //复制体也要跟着修正：CloneManager 只在生成时抄过一次玩家视觉的 localScale/localPosition，
+        //不主动同步的话，切回原始角色后复制体会一直停在变身时的放大值与偏移上。
         //复制体从不参与拾取动画的 Q 弹形变，所以这里统一按稳定值同步。
         CloneManager manager = CloneManager.Existing;
         if (manager != null)
-            manager.SetVisualScale(target);
+            manager.SetVisualTransform(targetScale, targetPosition);
 
         //拾取动画期间玩家视觉由 PlayerItemController 驱动（要做 Q 弹形变），这里让位
         if (player != null && player.isPickingUp) return;
@@ -127,18 +130,29 @@ public class PlayerAnimationSet : MonoBehaviour
         if (a == null) return;
 
         Transform visual = a.transform;
-        if (visual.localScale != target)
-            visual.localScale = target;
+        if (visual.localScale != targetScale)
+            visual.localScale = targetScale;
+        if (visual.localPosition != targetPosition)
+            visual.localPosition = targetPosition;
     }
 
-    /// <summary>当前应有的视觉缩放（不含拾取动画的 Q 弹形变）：持有带动画组的道具时放大，其余还原</summary>
+    /// <summary>当前应有的视觉缩放（不含拾取动画的 Q 弹形变）：取自当前道具的 visualScale，其余还原</summary>
     private Vector3 TargetVisualScale
     {
         get
         {
-            return itemSetActive
-                ? Vector3.Scale(baseVisualScale, new Vector3(visualScale.x, visualScale.y, 1f))
-                : baseVisualScale;
+            if (!itemSetActive || activeSet == null) return baseVisualScale;
+            return Vector3.Scale(baseVisualScale, new Vector3(activeSet.visualScale.x, activeSet.visualScale.y, 1f));
+        }
+    }
+
+    /// <summary>当前应有的视觉偏移（不含拾取动画的 Q 弹形变）：取自当前道具的 visualOffset，其余还原</summary>
+    private Vector3 TargetVisualPosition
+    {
+        get
+        {
+            if (!itemSetActive || activeSet == null) return baseVisualPosition;
+            return baseVisualPosition + new Vector3(activeSet.visualOffset.x, activeSet.visualOffset.y, 0f);
         }
     }
 
