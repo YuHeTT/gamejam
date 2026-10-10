@@ -6967,6 +6967,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u80DC\u5229\u70B9"
       objectReference: {fileID: 0}
+    - target: {fileID: 5590984976612948114, guid: 25013e62662ee0f4db00d30dc31ef3e5, type: 3}
+      propertyPath: buildIndexStep
+      value: -16
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

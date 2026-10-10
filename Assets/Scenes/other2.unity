@@ -413,6 +413,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: box
       objectReference: {fileID: 0}
+    - target: {fileID: 8163838452551373544, guid: 23fcf31631a1f824f97e872d1bd0d6b7, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 5b4453eed4c85fb4f9a240eb261d7d70, type: 3}
     - target: {fileID: 8954817864673116896, guid: 23fcf31631a1f824f97e872d1bd0d6b7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 44
@@ -588,6 +592,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &968737417 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3878038567950151590, guid: 25013e62662ee0f4db00d30dc31ef3e5, type: 3}
+  m_PrefabInstance: {fileID: 1660964709}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1052278002
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -944,6 +953,10 @@ PrefabInstance:
     - target: {fileID: 3878038567950151590, guid: 25013e62662ee0f4db00d30dc31ef3e5, type: 3}
       propertyPath: m_Name
       value: "\u80DC\u5229\u70B9"
+      objectReference: {fileID: 0}
+    - target: {fileID: 3878038567950151590, guid: 25013e62662ee0f4db00d30dc31ef3e5, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1866,6 +1879,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1732678461116676302}
   - component: {fileID: 6867538195868700263}
+  - component: {fileID: 9061310843277096288}
   m_Layer: 0
   m_Name: Balance
   m_TagString: Untagged
@@ -1873,6 +1887,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &9061310843277096288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9061310843277096287}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75c41c9c94b45f4b866e2b9b3b38162, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  elevator: {fileID: 0}
+  victoryPoint: {fileID: 968737417}
+  revealDelay: 2
+  hideOnStart: 1
+  logProgress: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
