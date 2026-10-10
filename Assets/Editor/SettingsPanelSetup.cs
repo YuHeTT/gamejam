@@ -130,6 +130,9 @@ public static class SettingsPanelSetup
                     case "OnRestart":   UnityEventTools.AddPersistentListener(btn.onClick, ui.OnRestart);   break;
                     case "OnBack":      UnityEventTools.AddPersistentListener(btn.onClick, ui.OnBack);      break;
                 }
+
+                // 悬停变暗+放大+点击音效；视觉图层按"实际像素包围盒"自动识别
+                UiButtonFxSetup.WireByPixel(btn);
             }
 
             // 6. 关卡 UI 指向面板，并让面板默认关闭

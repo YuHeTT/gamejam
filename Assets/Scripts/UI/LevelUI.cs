@@ -103,6 +103,7 @@ public class LevelUI : MonoBehaviour
         // 点击框：直接挂 Canvas（不挂在视觉节点下，避免被缩放/翻转影响）
         _button = LevelUiUtil.CreateHitBox(canvas.transform, "Btn_Settings", x0, y0, x1, y1);
         _button.onClick.AddListener(OpenSettings);
+        LevelUiUtil.WireHighlight(_button, visual);   // 齿轮的悬停变暗+放大+点击音效
     }
 
     /// <summary>
