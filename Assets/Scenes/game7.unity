@@ -4398,6 +4398,18 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6521259166899334174, guid: 212f7ad4cd32025428b7017b1d63cd93, type: 3}
+      propertyPath: m_Color.b
+      value: 0.21960786
+      objectReference: {fileID: 0}
+    - target: {fileID: 6521259166899334174, guid: 212f7ad4cd32025428b7017b1d63cd93, type: 3}
+      propertyPath: m_Color.g
+      value: 0.21960786
+      objectReference: {fileID: 0}
+    - target: {fileID: 6521259166899334174, guid: 212f7ad4cd32025428b7017b1d63cd93, type: 3}
+      propertyPath: m_Color.r
+      value: 0.21960786
+      objectReference: {fileID: 0}
     - target: {fileID: 6592458125764926366, guid: 212f7ad4cd32025428b7017b1d63cd93, type: 3}
       propertyPath: m_LocalPosition.x
       value: 48.04
