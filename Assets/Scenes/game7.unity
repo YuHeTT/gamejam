@@ -957,6 +957,12 @@ MonoBehaviour:
   boundsAreCenter: 1
   moveSpeed: 1.5
   waitTime: 1
+  carryRiders: 1
+  carryDetectHeight: 0.4
+  carryFootTolerance: 0.15
+  carryMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   drawGizmos: 1
 --- !u!1 &474330204
 GameObject:
@@ -1015,7 +1021,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uFF08\u6307\u4E00\u79CD\u65F6\u95F4\uFF09"
+  m_text: "\uFF08\u6307\u4E00\u4E2A\n   \u5929\u4F53\uFF09"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
   m_sharedMaterial: {fileID: 2563356364561745423, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
@@ -1078,7 +1084,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 131.14883, w: -24.225048}
+  m_margin: {x: 0, y: 0, z: 134.90617, w: -24.225048}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -3199,7 +3205,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u4FD7\u8BDD\u8BF4"
+  m_text: "\u6709\u9053\u662F"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
   m_sharedMaterial: {fileID: 2563356364561745423, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
@@ -4964,11 +4970,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6535696811519979815, guid: e2d0fd33b0f195f4aa083dc71574fd5e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -326.32
+      value: -326.34
       objectReference: {fileID: 0}
     - target: {fileID: 6535696811519979815, guid: e2d0fd33b0f195f4aa083dc71574fd5e, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -192.34
+      value: -192.54
       objectReference: {fileID: 0}
     - target: {fileID: 8188267550783918830, guid: e2d0fd33b0f195f4aa083dc71574fd5e, type: 3}
       propertyPath: m_text
