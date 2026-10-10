@@ -1001,6 +1001,14 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 37df136560bd5544a9c2c1075e73b4a9, type: 3}
+    - target: {fileID: 5442134997522458607, guid: e3fe97e67aef60147adf9433e1367f04, type: 3}
+      propertyPath: animationClips.visualScale.y
+      value: 2.37
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442134997522458607, guid: e3fe97e67aef60147adf9433e1367f04, type: 3}
+      propertyPath: animationClips.visualOffset.x
+      value: 0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 6902031744917067901, guid: e3fe97e67aef60147adf9433e1367f04, type: 3}
       propertyPath: m_Size.x
       value: 21.753752
@@ -1287,7 +1295,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1728721989497474337, guid: 25013e62662ee0f4db00d30dc31ef3e5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 13.13
+      value: 12.62
       objectReference: {fileID: 0}
     - target: {fileID: 1728721989497474337, guid: 25013e62662ee0f4db00d30dc31ef3e5, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3810,3 +3818,4 @@ SceneRoots:
   - {fileID: 540315861}
   - {fileID: 632004656}
   - {fileID: 692140629}
+  - {fileID: 546460585}
