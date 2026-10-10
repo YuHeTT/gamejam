@@ -154,7 +154,7 @@ public static class WindMigrationTools
 
     // ============================================================ 步骤 1
 
-    [MenuItem("Tools/风扇/改造-步骤1：对齐风区尺寸并迁移周期设置")]
+    [MenuItem("Tools/历史工具/风区迁移/改造-步骤1：对齐风区尺寸并迁移周期设置")]
     public static void Step1_AlignAndMigrate()
     {
         int sceneCount = 0, windTotal = 0, migrated = 0;
@@ -244,12 +244,12 @@ public static class WindMigrationTools
             "已处理 " + sceneCount + " 个场景 / " + windTotal + " 个 wind 实例。\n\n" +
             "· 碰撞体已对齐为 size(2,6) offset(0,3)\n" +
             "· 迁移了 " + migrated + " 个实例的周期设置\n\n" +
-            "下一步：Tools → 风扇 → 改造-步骤4（扩展成覆盖并集）。", "好");
+            "下一步：Tools → 历史工具 → 风区迁移 → 改造-步骤4（扩展成覆盖并集）。", "好");
     }
 
     // ============================================================ 步骤 4
 
-    [MenuItem("Tools/风扇/改造-步骤4：把 wind 风区扩展成覆盖并集")]
+    [MenuItem("Tools/历史工具/风区迁移/改造-步骤4：把 wind 风区扩展成覆盖并集")]
     public static void Step4_ExtendZoneToUnion()
     {
         if (!EditorUtility.DisplayDialog("确认扩展",
@@ -323,12 +323,12 @@ public static class WindMigrationTools
 
         EditorUtility.DisplayDialog("步骤4 完成",
             "已扩展 " + changed + " 个风区，另有 " + already + " 个本来就够大。\n\n" +
-            "下一步：Tools → 风扇 → 改造-步骤2（停用粒子）。", "好");
+            "下一步：Tools → 历史工具 → 风区迁移 → 改造-步骤2（停用粒子）。", "好");
     }
 
     // ============================================================ 步骤 2
 
-    [MenuItem("Tools/风扇/改造-步骤2：停用 WindArea 实例的粒子（可逆）")]
+    [MenuItem("Tools/历史工具/风区迁移/改造-步骤2：停用 WindArea 实例的粒子（可逆）")]
     public static void Step2_DisableParticles()
     {
         int n = 0;
@@ -373,7 +373,7 @@ public static class WindMigrationTools
 
     // ============================================================ 步骤 3
 
-    [MenuItem("Tools/风扇/改造-步骤3：删除 WindArea 实例（有覆盖缺口会自动跳过）")]
+    [MenuItem("Tools/历史工具/风区迁移/改造-步骤3：删除 WindArea 实例（有覆盖缺口会自动跳过）")]
     public static void Step3_DeleteInstances()
     {
         if (!EditorUtility.DisplayDialog("确认删除",
@@ -466,7 +466,7 @@ public static class WindMigrationTools
     /// 一键完成：停用全部 WindArea 粒子 → 把 wind 风区按<b>世界空间</b>扩展成与配对 WindArea 的并集
     /// → 删除已被完整覆盖的 WindArea → 打印每个实例的世界数值。
     /// </summary>
-    [MenuItem("Tools/风扇/★一键整合：停粒子 + 扩展覆盖 + 删除 WindArea")]
+    [MenuItem("Tools/历史工具/风区迁移/★一键整合：停粒子 + 扩展覆盖 + 删除 WindArea")]
     public static void OneClickConsolidate()
     {
         if (!EditorUtility.DisplayDialog("一键整合",
@@ -620,7 +620,7 @@ public static class WindMigrationTools
 
     // ============================================================ 还原 / 诊断
 
-    [MenuItem("Tools/风扇/还原：从备份恢复改动前的文件")]
+    [MenuItem("Tools/历史工具/风区迁移/还原：从备份恢复改动前的文件")]
     public static void RestoreFromBackup()
     {
         string projectRoot = Directory.GetParent(Application.dataPath).FullName;
@@ -670,7 +670,7 @@ public static class WindMigrationTools
             "。\n\n请重新打开 game6/7/8 场景。", "好");
     }
 
-    [MenuItem("Tools/风扇/诊断：列出所有风区实例（含嵌套）")]
+    [MenuItem("Tools/历史工具/风区迁移/诊断：列出所有风区实例（含嵌套）")]
     public static void Diagnose()
     {
         System.Text.StringBuilder sb = new System.Text.StringBuilder();

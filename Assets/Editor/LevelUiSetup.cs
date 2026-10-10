@@ -63,6 +63,7 @@ public static class LevelUiSetup
 
         Button btn = LevelUiUtil.CreateHitBox(root.transform, "Btn_Settings", x0, y0, x1, y1);
         UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, levelUi.OpenSettings);
+        LevelUiUtil.WireHighlight(btn, visual);   // 齿轮的悬停变暗+放大+点击音效
 
         Directory.CreateDirectory(Path.GetDirectoryName(PrefabPath));
         PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);

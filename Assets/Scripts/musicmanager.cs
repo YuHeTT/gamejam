@@ -133,6 +133,9 @@ public class musicmanager : MonoBehaviour
     /// <summary>冲刺音效 = shotclips 的 Element 13「冲刺音效 1」</summary>
     public const int ShotIndexDash = 13;
 
+    /// <summary>UI 按钮点击音效 = shotclips 的 Element 5「点击音效」</summary>
+    public const int ShotIndexUiClick = 5;
+
     /// <summary>
     /// 播放音效。<br/>
     /// <paramref name="index"/> = Inspector 里 shotclips 的 Element 序号（从 0 开始）；<br/>

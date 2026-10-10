@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 设置界面上的布局可视化工具。<br/>
-/// 菜单：Tools → UI → 设置界面：显示/隐藏布局辅助框（默认开）<br/>
+/// 菜单：Tools → UI → 诊断 → 设置界面：显示/隐藏布局辅助框（默认开）<br/>
 /// 在 Scene 视图用彩色方框标出「退出游戏 / 退出关卡 / 重新开始」三个按钮的实际位置，
 /// 对照 Art/设置-1等5项文件/设置-1.png 的画稿就能一眼看出坐标差多少，不用反复生成试错。
 /// </summary>
@@ -41,7 +41,7 @@ public static class LevelSettingsGizmos
         SceneView.duringSceneGui += OnSceneGui;
     }
 
-    [MenuItem("Tools/UI/设置界面：显示或隐藏布局辅助框")]
+    [MenuItem("Tools/UI/诊断/设置界面：显示或隐藏布局辅助框")]
     private static void Toggle()
     {
         Enabled = !Enabled;
@@ -49,28 +49,9 @@ public static class LevelSettingsGizmos
         Debug.Log("[设置界面布局] 辅助框显示：" + (Enabled ? "开" : "关"));
     }
 
-    [MenuItem("Tools/UI/设置界面：打印三个按钮的实际矩形")]
-    private static void PrintRects()
-    {
-        foreach (string n in Names)
-        {
-            GameObject go = GameObject.Find(n);
-            if (go == null)
-            {
-                Debug.Log("[设置界面布局] 未找到 " + n + "（该场景可能还没生成，或当前不是 UI_settings）");
-                continue;
-            }
-
-            RectTransform rt = go.transform as RectTransform;
-            Vector3[] c = new Vector3[4];
-            rt.GetWorldCorners(c);
-            Rect r = new Rect(c[0].x, c[0].y, c[2].x - c[0].x, c[2].y - c[0].y);
-
-            Debug.Log(string.Format(
-                "[设置界面布局] {0}: 屏幕像素 x[{1:F0},{2:F0}] y[{3:F0},{4:F0}]  尺寸 {5:F0}×{6:F0}",
-                n, r.xMin, r.xMax, r.yMin, r.yMax, r.width, r.height));
-        }
-    }
+    // 说明：曾经的「打印三个按钮的实际矩形」已删除 —— 那是一次性标定用的，
+    // 现在四个点击框的位置已经稳定（见 MenuUIBuilder.BuildSettingsScene 的注释），
+    // 需要复核时用上面的辅助框在 Scene 视图里直接看即可。
 
     private static void OnSceneGui(SceneView view)
     {

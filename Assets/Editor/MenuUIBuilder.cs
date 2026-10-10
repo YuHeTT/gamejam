@@ -45,8 +45,8 @@ public static class MenuUIBuilder
 
     /// <summary>
     /// 美术 y 轴方向。<br/>
-    /// 若点击框整体上下错位（画面上元素在上面、点击区却在下面，或反之），
-    /// 用菜单 Tools → UI → 切换点击框的 Y 方向 一键盘切换，再重新生成一次即可。
+    /// 已实测确认为"向上增大"，一般不需要动。若哪天换了美术、点击框整体上下错位，
+    /// 把 <see cref="ArtYAxis.Down"/> 当作默认值（或临时改这里的 getter）再重新生成一次即可。
     /// </summary>
     private static ArtYAxis artY
     {
@@ -56,14 +56,8 @@ public static class MenuUIBuilder
         set { EditorPrefs.SetInt("MenuUIBuilder.ArtYAxis", (int)value); }
     }
 
-    [MenuItem("Tools/UI/切换点击框的 Y 方向（上下错位时用）")]
-    private static void ToggleArtY()
-    {
-        artY = artY == ArtYAxis.Down ? ArtYAxis.Up : ArtYAxis.Down;
-        Debug.Log("[MenuUIBuilder] 点击框 Y 方向已切换为：" + artY +
-                  "（Down = 美术 y 向下增大；Up = 美术 y 向上增大）。" +
-                  "请重新执行 Tools → UI → 生成主界面与子界面 后查看效果。");
-    }
+    // 说明：曾经的「切换点击框的 Y 方向」菜单已经删掉 —— 方向早已实测确认（见下面 artY 的注释），
+    // 那个开关只会让人误以为"生成结果不可靠"。真要改方向，改 artY 的默认值即可。
 
     // ============================================================================
     //  坐标系统一说明（重要）
@@ -335,6 +329,10 @@ public static class MenuUIBuilder
     {
         Button btn = LevelUiUtil.CreateHitBox(canvas.transform, name, x0, y0, x1, y1);
 
+        // 悬停变暗+放大+点击音效。视觉图层靠"实际像素包围盒"自动识别（见 UiButtonFxSetup），
+        // 所以这里不需要维护"哪个按钮对应哪张图"的表格。
+        UiButtonFxSetup.WireByPixel(btn);
+
         if (ui == null) return;
 
         UnityEditor.Events.UnityEventTools.AddPersistentListener(
@@ -572,7 +570,7 @@ public static class MenuUIBuilder
 
         AddHitBoxOnCanvas(canvas, nodeName,
                           x0 - padX, y0 - padY,
-                          x1 + padX, y1 + padY, target);
+                          x1 + padX, y1 + padY, target, img);
 
         Debug.Log(string.Format(
             "[MenuUIBuilder] {0}: 箭头 x[{1:F0},{2:F0}] y[{3:F0},{4:F0}] ({5:F0}x{6:F0})；" +
@@ -587,7 +585,7 @@ public static class MenuUIBuilder
     /// </summary>
     private static GameObject AddHitBoxOnCanvas(GameObject canvas, string name,
                                                 float x0, float y0, float x1, float y1,
-                                                NavTarget? target)
+                                                NavTarget? target, Image visual = null)
     {
         GameObject hit = new GameObject(name + "_Hit",
             typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
@@ -604,6 +602,7 @@ public static class MenuUIBuilder
         btn.transition = Selectable.Transition.None;
 
         BindClick(hit, btn, target);
+        LevelUiUtil.WireHighlight(btn, visual);   // 悬停变暗+放大+点击音效
         return hit;
     }
 
@@ -696,6 +695,9 @@ public static class MenuUIBuilder
                 UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, nav.Go);
             }
         }
+
+        // 悬停变暗+放大+点击音效：父物体就是这张按钮的整幅美术图层
+        LevelUiUtil.WireHighlight(btn, parent != null ? parent.GetComponent<Image>() : null);
 
         return hit;
     }

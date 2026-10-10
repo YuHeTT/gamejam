@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// UI 点击链路自检。菜单：Tools → UI → 检查当前场景的 UI 点击链路<br/>
+/// UI 点击链路自检。菜单：Tools → UI → 诊断 → 检查当前场景的 UI 点击链路<br/>
 /// 逐项检查：EventSystem / 输入模块 / Canvas / GraphicRaycaster / 所有按钮（位置、尺寸、
 /// 是否在屏幕内、raycastTarget、onClick 绑定、目标场景是否在 Build Settings），
 /// 并在 Scene 视图用方框标出所有按钮区域（绿色=正常，红色=有问题）。
@@ -19,7 +19,7 @@ public static class MenuUIDiagnostics
     private static readonly List<Rect> _screenRects = new List<Rect>();
     private static readonly List<bool> _screenOk = new List<bool>();
 
-    [MenuItem("Tools/UI/检查当前场景的 UI 点击链路")]
+    [MenuItem("Tools/UI/诊断/检查当前场景的 UI 点击链路")]
     public static void Check()
     {
         _screenRects.Clear();
@@ -243,7 +243,7 @@ public static class MenuUIDiagnostics
 /// <summary>
 /// 在 Scene 视图实时画出 UI 点击框与 1920×1080 屏幕边界，方便肉眼核对
 /// "点击框是否和画面上的文字重合"。<br/>
-/// 菜单：Tools → UI → 开关：Scene 视图显示点击框<br/>
+/// 菜单：Tools → UI → 诊断 → 开关：Scene 视图显示点击框<br/>
 /// 蓝色 = 1920×1080 屏幕边界；绿色 = 点击框（可点）；红色 = 有问题。
 /// </summary>
 [InitializeOnLoad]
@@ -263,7 +263,7 @@ public static class MenuUIGizmos
         SceneView.duringSceneGui += OnSceneGui;
     }
 
-    [MenuItem("Tools/UI/开关：Scene 视图显示点击框")]
+    [MenuItem("Tools/UI/诊断/开关：Scene 视图显示点击框")]
     private static void Toggle()
     {
         Enabled = !Enabled;
