@@ -213,7 +213,7 @@ MonoBehaviour:
     m_Bits: 256
   pickUpCooldown: 0.15
   pickUpKey: 106
-  pickUpAnimDuration: 1.2
+  pickUpAnimDuration: 1
   stretchTime: 0.05
   squashTime: 0.1
   returnTime: 0.1
