@@ -289,6 +289,9 @@ public class PlayerItemController : MonoBehaviour
         StopPickUpAnim();
         if (item == null) return;
 
+        //道具拒绝被收下（例如"墓"把自己抛回世界）：动画照播，但不进道具栏、也不触发换装
+        if (item.TryRejectPickUp(player)) return;
+
         item.CompletePickUp(player);      //隐藏图像 + 触发 OnPickUp
         CurrentItem = item;
         OnItemChanged?.Invoke(item);

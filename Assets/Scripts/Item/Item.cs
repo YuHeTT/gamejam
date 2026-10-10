@@ -109,6 +109,10 @@ public class Item : MonoBehaviour
     /// <summary>进入道具栏时触发</summary>
     public virtual void OnPickUp(Player player) { }
 
+    /// <summary>拾取动画播完时调用。返回 true 表示这次拾取不算数 —— 调用方不会把道具收进道具栏，
+    /// 子类通常在这里把道具抛回世界（例如"墓"把它扔出去，玩家永远拿不到能力）。</summary>
+    public virtual bool TryRejectPickUp(Player player) => false;
+
     /// <summary>按 I 使用能力。返回 true 表示该道具被消耗（从槽位移除并销毁）</summary>
     public virtual bool UseAbility(Player player) => false;
 
