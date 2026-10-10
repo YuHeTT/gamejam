@@ -126,11 +126,12 @@ public class PlayerDeathManager : MonoBehaviour
         //先用黑屏挡住游戏画面（视频层在黑色遮罩之上，因此视频仍会显示在最前）
         SetCoverY(0f);
 
-        //保证视频播放期间背景音乐不中断：VideoPlayer 的 Direct 音频输出会绕开 Unity 音频系统，
-        //在部分平台（尤其 Windows）开始播放时会重置音频输出，把正在播的背景音乐一起掐掉。
-        //这里记下进入时的播放状态，循环里检测到被停就补播，让音乐整段视频都不断。
+        //播放视频期间暂时暂停背景音乐，视频播完或玩家主动退出后再继续。
+        //用 Pause / UnPause 而不是 Stop / Play：Pause 会保留播放进度，继续时接着原来的位置播。
+        //只在进入时确实正在播放才动它 —— 若背景音乐本来就没在放（例如被「募」的警报音乐中断），保持原样。
         AudioSource bgm = musicmanager.instance != null ? musicmanager.instance.bgm : null;
-        bool keepBgmAlive = bgm != null && bgm.isPlaying;
+        bool pausedBgm = bgm != null && bgm.isPlaying;
+        if (pausedBgm) bgm.Pause();
 
         EnsureVideoTexture();
         videoImage.texture        = videoRT;
@@ -147,10 +148,6 @@ public class PlayerDeathManager : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
             if (videoPlayer.isPlaying) started = true;
-
-            //背景音乐被视频输出打断则补播（只在真的停了时调一次 Play，不重复打断）
-            if (keepBgmAlive && !bgm.isPlaying)
-                bgm.Play();
 
             //视频播放结束 → 退出
             if (started && !videoPlayer.isPlaying) break;
@@ -169,6 +166,9 @@ public class PlayerDeathManager : MonoBehaviour
         videoPlayer.Stop();
         videoImage.gameObject.SetActive(false);
         SetCoverY(Screen.height + CoverMargin);   //收起黑屏
+
+        //视频结束（或玩家中途按键退出）→ 继续播放被暂停的背景音乐，接着原来的进度
+        if (pausedBgm && bgm != null) bgm.UnPause();
 
         ReloadScene();     //正常复活：场景重启
         running = false;
