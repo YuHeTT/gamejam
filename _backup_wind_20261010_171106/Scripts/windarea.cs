@@ -6,10 +6,8 @@ using UnityEngine;
 /// 风扇风区：进入触发器范围的玩家会受到持续向上的风场，被托着上升。<br/>
 /// 作用方式：FixedUpdate 里给玩家刚体施加向上的力（AddForce），并把上升速度限制在 windSpeed 内，
 /// 因此风是"托举"而不是"瞬移"；离开风区后交给重力自然下坠。<br/>
-/// 风口随昼夜开闭：白天开启（吹风 + 播放风动画），黑夜关闭（不吹风、停止动画）。<br/>
-/// 勾选 usePeriodicCycle 后忽略昼夜，改为按周期自动开 n 秒、关 m 秒（动画同步）。<br/><br/>
-/// <b>视觉表现</b>：由子物体上的 Animator 参数 <c>iswind</c> 驱动（循环动画）。
-/// 风口开 → <c>iswind = true</c>；风口关 → <c>iswind = false</c>，同时清掉残留帧以免画面留影。
+/// 风口随昼夜开闭：白天开启（吹风 + 粒子），黑夜关闭（不吹风、不再发射粒子）。<br/>
+/// 勾选 usePeriodicCycle 后忽略昼夜，改为按周期自动开 n 秒、关 m 秒（粒子同步）。
 /// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class windarea : MonoBehaviour
@@ -26,15 +24,13 @@ public class windarea : MonoBehaviour
     [Tooltip("要求玩家处于漂浮状态(isFloating)才生效：没拿「幕」道具时站在风区里不会被吹起")]
     public bool requireFloating = true;
 
-    [Header("风动画（可留空：运行时会自动在子物体里查找 Animator）")]
-    [Tooltip("用参数 iswind 控制：风口开=true 播放循环动画，风口关=false 停止")]
-    public Animator animator;
-
-    /// <summary>动画参数名（与 wind.controller 里的 bool 参数一致）</summary>
-    private const string WindAnimParam = "iswind";
+    [Header("粒子特效（可留空：运行时会自动在自身和子物体里查找）")]
+    public ParticleSystem windParticles;
+    [Tooltip("勾选后粒子发射框会自动匹配本物体 Collider2D 的尺寸")]
+    public bool syncParticlesWithTrigger = true;
 
     [Header("周期开关（可选）")]
-    [Tooltip("勾选后忽略昼夜，按固定周期自动开/关风口（动画同步）")]
+    [Tooltip("勾选后忽略昼夜，按固定周期自动开/关风口（粒子同步）")]
     public bool usePeriodicCycle = false;
     [Tooltip("周期模式：每次开启持续 n 秒")]
     public float openDuration = 3f;
@@ -70,11 +66,10 @@ public class windarea : MonoBehaviour
             Debug.LogWarning("windarea: " + name + " 的 Collider2D 没有勾选 Is Trigger，无法作为风区触发范围。", this);
         }
 
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
+        if (windParticles == null)
+            windParticles = GetComponentInChildren<ParticleSystem>();
 
-        if (animator == null)
-            Debug.LogWarning("windarea: " + name + " 没找到 Animator，风不会有动画表现（风力仍然生效）。", this);
+        ApplyParticleShape();
     }
 
     private void OnEnable()
@@ -140,7 +135,7 @@ public class windarea : MonoBehaviour
         SetVentOpen(_cycleOpenPhase);
     }
 
-    /// <summary>白天风口开启（吹风 + 播放动画），黑夜风口关闭（不吹风 + 停动画）。周期模式下由周期计时接管。</summary>
+    /// <summary>白天风口开启（吹风 + 粒子），黑夜风口关闭（不吹风 + 停止发射粒子）。周期模式下由周期计时接管。</summary>
     private void ApplyVentState(bool isNight)
     {
         if (usePeriodicCycle) return;   //周期模式接管风口开关
@@ -148,31 +143,15 @@ public class windarea : MonoBehaviour
         SetVentOpen(!isNight);
     }
 
-    /// <summary>
-    /// 设置风口开/关，并同步风动画。<br/>
-    /// 开启：<c>iswind = true</c> 播放循环动画。<br/>
-    /// 关闭：<c>iswind = false</c>；控制器若没有"空白状态"，动画会停在最后一帧，
-    /// 所以这里额外把被动画驱动的精灵清空，保证画面不留影。
-    /// </summary>
+    /// <summary>设置风口开/关，并同步粒子特效</summary>
     private void SetVentOpen(bool open)
     {
         _ventOpen = open;
 
-        if (animator == null) return;
+        if (windParticles == null) return;
 
-        animator.SetBool(WindAnimParam, open);
-
-        if (!open) ClearAnimationSprite();
-    }
-
-    /// <summary>清掉动画驱动的那张精灵，避免风口关闭后画面残留最后一帧</summary>
-    private void ClearAnimationSprite()
-    {
-        if (animator == null) return;
-
-        // animator 挂在被动画驱动的那个子物体上（wind.prefab 里的 6-1-7）
-        SpriteRenderer sr = animator.GetComponent<SpriteRenderer>();
-        if (sr != null) sr.sprite = null;
+        if (_ventOpen) windParticles.Play();
+        else           windParticles.Stop();
     }
 
     private void FixedUpdate()
@@ -357,6 +336,31 @@ public class windarea : MonoBehaviour
         }
 
         return body;
+    }
+
+    /// <summary>把粒子发射框对齐到风区碰撞体尺寸，改碰撞体大小后粒子范围自动跟着变</summary>
+    private void ApplyParticleShape()
+    {
+        if (!syncParticlesWithTrigger) return;
+        if (windParticles == null || _zone == null) return;
+
+        ParticleSystem.ShapeModule shape = windParticles.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Box;
+
+        BoxCollider2D box = _zone as BoxCollider2D;
+        if (box != null)
+        {
+            // BoxCollider2D 用 size/offset；其他形状退化为用包围盒尺寸
+            shape.scale = new Vector3(box.size.x, box.size.y, 1f);
+            shape.position = new Vector3(box.offset.x, box.offset.y, 0f);
+        }
+        else
+        {
+            Vector3 size = _zone.bounds.size;
+            shape.scale = new Vector3(size.x, size.y, 1f);
+            shape.position = Vector3.zero;
+        }
     }
 
     private void OnDrawGizmosSelected()
