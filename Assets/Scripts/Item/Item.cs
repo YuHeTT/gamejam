@@ -38,6 +38,11 @@ public class Item : MonoBehaviour
     [Header("DropInfo")]
     public Vector2 dropOffset = Vector2.zero; // 从玩家身上放回世界时的偏移
 
+    [Header("拾取前状态（可选）")]
+    [Tooltip("勾选：第一次被拾取之前不掉落。摆在空中/墙上、还没被拿到就先摔下来的道具用它。" +
+             "第一次放回世界后自动恢复成和普通道具完全相同的物理参数")]
+    public bool freezeUntilFirstPickUp = false;
+
     [Header("机关影响")]
     [Tooltip("勾选：本道具落在踏板上时能触发踏板机关（triggerfloor）")]
     public bool canTriggerPedal = false;
@@ -58,6 +63,17 @@ public class Item : MonoBehaviour
         sr  = GetComponentInChildren<SpriteRenderer>();
         rb  = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
+
+        //第一次拾取前不参与物理：关掉重力并锁死位置，避免道具还没被拿到就先掉下去。
+        //这里不用 rb.simulated = false —— 那会让碰撞体退出物理世界，玩家的 OverlapCircle 拾取检测就找不到它了。
+        //恢复交给 ReturnToWorld（它本来就会把重力与约束重设成普通道具的值），所以第一次丢弃后即与其它道具完全一致。
+        if (freezeUntilFirstPickUp && rb != null)
+        {
+            rb.gravityScale    = 0f;
+            rb.constraints     = RigidbodyConstraints2D.FreezeAll;
+            rb.velocity        = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
 
         //道具不与箱子发生物理碰撞（玩家与箱子照常碰）
         IgnoreBoxCollisions();
