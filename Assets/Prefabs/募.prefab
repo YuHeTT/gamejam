@@ -55,6 +55,8 @@ MonoBehaviour:
     move: {fileID: 7400000, guid: c9e166d7e0953044388c77a774e31cf3, type: 2}
     jump: {fileID: 7400000, guid: 5342e80ae755e884e9e33bcf252b251e, type: 2}
     dash: {fileID: 0}
+    visualScale: {x: 1.78, y: 2.45}
+    visualOffset: {x: 0.1, y: 0.18}
   dropOffset: {x: 0, y: -0.8}
   canTriggerPedal: 0
   canWeighOnBalance: 0
