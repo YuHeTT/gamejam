@@ -663,7 +663,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 80749f256d5c4de47bb342fb04d431e6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -957,6 +957,12 @@ MonoBehaviour:
   boundsAreCenter: 1
   moveSpeed: 1.5
   waitTime: 1
+  carryRiders: 1
+  carryDetectHeight: 0.4
+  carryFootTolerance: 0.15
+  carryMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   drawGizmos: 1
 --- !u!1 &474330204
 GameObject:
@@ -1015,7 +1021,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uFF08\u6307\u4E00\u79CD\u65F6\u95F4\uFF09"
+  m_text: "\uFF08\u6307\u4E00\u4E2A\n   \u5929\u4F53\uFF09"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
   m_sharedMaterial: {fileID: 2563356364561745423, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
@@ -1078,7 +1084,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 131.14883, w: -24.225048}
+  m_margin: {x: 0, y: 0, z: 134.90617, w: -24.225048}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1360,15 +1366,15 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 7fcd613233538764d97542feec732419, type: 3}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.b
-      value: 0.7169812
+      value: 0.37647063
       objectReference: {fileID: 0}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.g
-      value: 0.36633793
+      value: 0.34509805
       objectReference: {fileID: 0}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.r
-      value: 0.2592855
+      value: 0.4901961
       objectReference: {fileID: 0}
     - target: {fileID: 8135310915596724953, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_LocalScale.x
@@ -1729,6 +1735,18 @@ PrefabInstance:
     - target: {fileID: 7051085446085280047, guid: bc72c41216e487f45abc1f3901ab392f, type: 3}
       propertyPath: m_Name
       value: botton
+      objectReference: {fileID: 0}
+    - target: {fileID: 8274767438885396078, guid: bc72c41216e487f45abc1f3901ab392f, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8274767438885396078, guid: bc72c41216e487f45abc1f3901ab392f, type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8274767438885396078, guid: bc72c41216e487f45abc1f3901ab392f, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8392005315077281150, guid: bc72c41216e487f45abc1f3901ab392f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3199,7 +3217,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u4FD7\u8BDD\u8BF4"
+  m_text: "\u6709\u9053\u662F"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
   m_sharedMaterial: {fileID: 2563356364561745423, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
@@ -4964,11 +4982,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6535696811519979815, guid: e2d0fd33b0f195f4aa083dc71574fd5e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -326.32
+      value: -326.34
       objectReference: {fileID: 0}
     - target: {fileID: 6535696811519979815, guid: e2d0fd33b0f195f4aa083dc71574fd5e, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -192.34
+      value: -192.54
       objectReference: {fileID: 0}
     - target: {fileID: 8188267550783918830, guid: e2d0fd33b0f195f4aa083dc71574fd5e, type: 3}
       propertyPath: m_text

@@ -46551,15 +46551,15 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 7fcd613233538764d97542feec732419, type: 3}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.b
-      value: 0.6603774
+      value: 0.2509804
       objectReference: {fileID: 0}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.g
-      value: 0.3960082
+      value: 0.65882355
       objectReference: {fileID: 0}
     - target: {fileID: 7945546454882324206, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_Color.r
-      value: 0.22635566
+      value: 0.4666667
       objectReference: {fileID: 0}
     - target: {fileID: 8135310915596724953, guid: c4db765022d106943a68f8ac73eb4597, type: 3}
       propertyPath: m_LocalPosition.x
@@ -47510,7 +47510,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 61f329a656a3d0b4ba8e41f92ec08443, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -48694,7 +48694,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -285.47, y: -186.02}
+  m_AnchoredPosition: {x: -286.43027, y: -186.02}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1405453719
@@ -48717,7 +48717,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u8FD9\u5230\u5E95\u662F\u4E2A\u4EC0\u4E48\u6837\u7684\u6545\u4E8B\u2026\u2026\n\u5230\u5E95\u5728\u641E\u83AB\u6BD4\u2026\u2026"
+  m_text: "\u8FD9\u5230\u5E95\u662F\u4E2A\u4EC0\u4E48\u6837\u7684\u6545\u4E8B\u2026\u2026\n\u4ED6\u65F6\u5E38\u4F1A\u60F3\uFF0C\u6709\u85AF\u6761\u7684\u7801\u5934\u5230\u5E95\u5728\u54EA"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
   m_sharedMaterial: {fileID: 2563356364561745423, guid: 6da56c0877d8eba4ca07966ad49fb5cf, type: 2}
@@ -48780,7 +48780,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -26.039516, w: 0}
+  m_margin: {x: 0, y: 0, z: -43.763966, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -55627,7 +55627,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: c23d25dc33eb5194fb1338716ccd97f3, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.044303894, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -55666,15 +55666,15 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 7fcd613233538764d97542feec732419, type: 3}
     - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: m_Color.b
-      value: 0.64779866
+      value: 0.06666667
       objectReference: {fileID: 0}
     - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: m_Color.g
-      value: 0.36427164
+      value: 0.058823533
       objectReference: {fileID: 0}
     - target: {fileID: 491369505540457532, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: m_Color.r
-      value: 0.2016731
+      value: 0.31764707
       objectReference: {fileID: 0}
     - target: {fileID: 514325346145274730, guid: 49b3eb48b32f876498daa42b0f7fb2e8, type: 3}
       propertyPath: triggerfloors.Array.size
