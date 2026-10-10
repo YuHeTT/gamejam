@@ -81,6 +81,9 @@ public class musicmanager : MonoBehaviour
 
         if (instance.bgm != null) instance.bgm.volume = EffectiveBgmVolume;
         if (instance.shot != null) instance.shot.volume = EffectiveShotVolume;
+
+        // 变速音效用的独立音源（用到才创建，可能还不存在）
+        if (instance._pitchShot != null) instance._pitchShot.volume = EffectiveShotVolume;
     }
 
     private static float LoadVolume(ref float cache, string key, float fallback)
@@ -97,6 +100,62 @@ public class musicmanager : MonoBehaviour
     {
         cache = Mathf.Clamp01(value);
         if (rememberVolume) PlayerPrefs.SetFloat(key, cache);
+    }
+
+    // ========================================================================
+    //  常用音效下标
+    //  下标 = Inspector 里 shotclips 显示的 "Element N" 的 N（数组从 Element 0 开始）。
+    // ========================================================================
+
+    /// <summary>开门（门上升）音效 = shotclips 的 Element 10「门开启音效」</summary>
+    public const int ShotIndexDoorOpen = 10;
+
+    /// <summary>关门（门下降）音效 = shotclips 的 Element 9「门关闭音效」</summary>
+    public const int ShotIndexDoorClose = 9;
+
+    /// <summary>
+    /// 播放音效。<br/>
+    /// <paramref name="index"/> = Inspector 里 shotclips 的 Element 序号（从 0 开始）；<br/>
+    /// <paramref name="pitch"/> = 播放速度倍数：1 = 原速，2 = <b>2 倍速</b>（音调同时升高）。<br/>
+    /// musicmanager 不在场时安全忽略 —— 门、机关这些地方不必每次都写一遍 null 判断。
+    /// </summary>
+    public static void PlayShotSound(int index, float pitch = 1f)
+    {
+        if (instance == null) return;
+        instance.PlayShotInternal(index, pitch);
+    }
+
+    // 变速音效（开关门就是变速播放的）必须走<b>独立的 AudioSource</b>：
+    // AudioSource.pitch 是整个音源共用的，直接在 shot 上改会把拾取 / 跳跃 / 走路等
+    // 所有音效一起变速，而且改完立刻还原也来不及 —— 一次性音效播放期间一直在读这个值。
+    // 这个音源在第一次用到变速音效时才创建，输出设置跟随 shot，听感保持一致。
+    private AudioSource _pitchShot;
+
+    private AudioSource PitchShotSource
+    {
+        get
+        {
+            if (_pitchShot != null) return _pitchShot;
+
+            GameObject go = new GameObject("shot_pitch");
+            go.transform.SetParent(transform, false);
+
+            _pitchShot = go.AddComponent<AudioSource>();
+            _pitchShot.playOnAwake = false;
+            _pitchShot.loop = false;
+            _pitchShot.pitch = 1f;
+            _pitchShot.volume = EffectiveShotVolume;   // 跟随「总音量 × 音效」
+
+            if (shot != null)
+            {
+                _pitchShot.outputAudioMixerGroup = shot.outputAudioMixerGroup;
+                _pitchShot.spatialBlend = shot.spatialBlend;
+                _pitchShot.ignoreListenerPause = shot.ignoreListenerPause;
+                _pitchShot.priority = shot.priority;
+            }
+
+            return _pitchShot;
+        }
     }
 
     void Awake()
@@ -173,7 +232,17 @@ public class musicmanager : MonoBehaviour
         // 同一首且正在播放：直接忽略，避免重复调用时把音乐从头打断
     }
 
+    /// <summary>原速播放音效（等价于 pitch = 1）</summary>
     public void PlayShot(int index)
+    {
+        PlayShotInternal(index, 1f);
+    }
+
+    /// <summary>
+    /// 播放音效。<paramref name="pitch"/> != 1 时走独立的变速音源，
+    /// 不影响 shot 上其它音效的速度。
+    /// </summary>
+    public void PlayShotInternal(int index, float pitch)
     {
         if (shot == null)
         {
@@ -191,6 +260,17 @@ public class musicmanager : MonoBehaviour
             Debug.LogWarning("Shot clip 为空, index: " + index);
             return;
         }
-        shot.PlayOneShot(newClip);
+
+        // 原速：和以前完全一样，用 shot 本身
+        if (Mathf.Approximately(pitch, 1f))
+        {
+            shot.PlayOneShot(newClip);
+            return;
+        }
+
+        // 变速：用独立音源，只改它的 pitch
+        AudioSource src = PitchShotSource;
+        src.pitch = pitch;
+        src.PlayOneShot(newClip);
     }
 }

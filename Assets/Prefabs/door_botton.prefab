@@ -151,4 +151,8 @@ MonoBehaviour:
   trimLineY: NaN
   minRemainHeight: 0.02
   rebuildDelta: 0.01
+  riseShotIndex: 10
+  fallShotIndex: 9
+  moveSoundPitch: 3
+  playMoveSound: 1
   debugLog: 0

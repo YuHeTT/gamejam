@@ -10,7 +10,11 @@ using UnityEngine;
 /// 2) SpriteMask 裁的是"区域内所有精灵"，会误伤天花板以上的其他物体；着色器裁剪的作用对象
 ///    精确等于"用了这个材质的渲染器"，只裁门自己；<br/>
 /// 3) 不需要 SpriteMask 物体，也不依赖排序层设置。<br/><br/>
-/// 与驱动脚本解耦：只观察自身位移，不关心是 botton / doorwithtrigger / ComboDoor 中的哪个在推。
+/// 与驱动脚本解耦：只观察自身位移，不关心是 botton / doorwithtrigger / ComboDoor 中的哪个在推。<br/><br/>
+/// <b>开关门音效也放在这里</b>：本工程每个门都挂了 DoorMask（door_botton / door_floor 预制体，
+/// 以及 game5 里的 door_botton 与 smalldoor），所以只要在这一个地方判断"门正在上升还是下降"，
+/// 就能覆盖全部三种驱动方式，不必去改 botton / doorwithtrigger / ComboDoor。<br/>
+/// 门没有刚体，位置只由驱动脚本改，所以静止时不会因为物理沉降误播音效。
 /// </summary>
 [DisallowMultipleComponent]
 public class DoorMask : MonoBehaviour
@@ -37,6 +41,17 @@ public class DoorMask : MonoBehaviour
     [Tooltip("高度变化小于该值时不重建碰撞体，避免物理抖动（米）")]
     public float rebuildDelta = 0.01f;
 
+    [Header("开关门音效")]
+    [Tooltip("门上升（开门）时播放哪个音效：Inspector 里 shotclips 的 Element 序号，10 = 门开启音效")]
+    public int riseShotIndex = musicmanager.ShotIndexDoorOpen;
+    [Tooltip("门下降（关门）时播放哪个音效：Inspector 里 shotclips 的 Element 序号，9 = 门关闭音效")]
+    public int fallShotIndex = musicmanager.ShotIndexDoorClose;
+    [Tooltip("开关门音效的播放速度倍数：1 = 原速，3 = 3 倍速（音调同时升高、时长变 1/3）。" +
+             "Unity 把 pitch 限制在 -3~3，所以 3 就是能调到的最大值")]
+    public float moveSoundPitch = 3f;
+    [Tooltip("关掉则这个门不发声（动画照常）")]
+    public bool playMoveSound = true;
+
     [Header("调试")]
     [Tooltip("每秒打印一次位移/碰撞体剩余高度/裁剪线，排查用")]
     public bool debugLog = false;
@@ -60,11 +75,19 @@ public class DoorMask : MonoBehaviour
 
     private float _lastLogTime = -10f;
 
+    // 开关门音效：上一帧的门高度 + 当前正在往哪个方向走（0=没动、1=上升、-1=下降）
+    private float _lastSoundY;
+    private int _moveDir;
+
+    /// <summary>判断"门动了没有"的阈值（米）。与下面碰撞体裁剪用的是同一个量级</summary>
+    private const float MoveEpsilon = 0.0001f;
+
     private Transform Part => doorPart != null ? doorPart : transform;
 
     private void Awake()
     {
         _startY = Part.position.y;
+        _lastSoundY = _startY;
 
         // 收集需要裁剪的渲染器（门本体 + 子物体）
         Part.GetComponentsInChildren(true, _renderers);
@@ -170,6 +193,9 @@ public class DoorMask : MonoBehaviour
 
         float travel = Part.position.y - _startY;
 
+        // 开关门音效：方向一变就播一次（上升=开门、下降=关门）
+        UpdateMoveSound();
+
         // 裁剪分界线固定在"初始门顶"的世界高度：门升上去才会被裁，落下来自动恢复。
         // 只有门真的动了才需要重建碰撞体（用 travel 判断，门静止时完全不碰物理）。
         if (trimCollider && _box != null && Mathf.Abs(travel) > 0.0001f)
@@ -185,6 +211,29 @@ public class DoorMask : MonoBehaviour
                 _box != null && _box.enabled ? _box.size.y * _origScaleY : 0f,
                 _clipMat != null ? _clipMat.shader.name : "未接管"), this);
         }
+    }
+
+    /// <summary>
+    /// 开关门音效：只看"门正在往上还是往下走"，方向一变就播一次。<br/>
+    /// 门停在半路再朝同方向继续时不会重复播（<c>_moveDir</c> 只在真的动了的时候更新，
+    /// 停下时保留上次方向）；门静止时完全不播。
+    /// </summary>
+    private void UpdateMoveSound()
+    {
+        float y = Part.position.y;
+        float dy = y - _lastSoundY;
+        _lastSoundY = y;
+
+        // 即使关掉音效也要记录高度，否则中途打开会按累积位移误判一次方向
+        if (!playMoveSound) return;
+
+        int dir = dy > MoveEpsilon ? 1 : (dy < -MoveEpsilon ? -1 : 0);
+        if (dir == 0) return;        // 这一帧没动，保持上次方向
+
+        if (dir == _moveDir) return; // 还在朝同一个方向走：不重复播
+        _moveDir = dir;
+
+        musicmanager.PlayShotSound(dir > 0 ? riseShotIndex : fallShotIndex, moveSoundPitch);
     }
 
     /// <summary>把碰撞体中"越过分界线"的部分切掉，底边保持不动</summary>
