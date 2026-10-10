@@ -130,6 +130,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 277850595318336332, guid: eaff518fcd03c5642a926150664e146d, type: 3}
+      propertyPath: animationClips.visualScale.y
+      value: 2.55
+      objectReference: {fileID: 0}
+    - target: {fileID: 277850595318336332, guid: eaff518fcd03c5642a926150664e146d, type: 3}
+      propertyPath: animationClips.visualOffset.y
+      value: 0.24
+      objectReference: {fileID: 0}
     - target: {fileID: 2549989766660350649, guid: eaff518fcd03c5642a926150664e146d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 28.12
@@ -1275,6 +1283,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3421050216489664957, guid: 3e48dd0f6a3fc494988b656efb1993ae, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.44
+      objectReference: {fileID: 0}
+    - target: {fileID: 3838328618029541094, guid: 3e48dd0f6a3fc494988b656efb1993ae, type: 3}
+      propertyPath: pickUpRadius
+      value: 0.77
+      objectReference: {fileID: 0}
     - target: {fileID: 4075995039563212431, guid: 3e48dd0f6a3fc494988b656efb1993ae, type: 3}
       propertyPath: m_LocalPosition.x
       value: 19.87
@@ -1656,6 +1672,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1960307262726113094, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
+      propertyPath: animationClips.visualScale.y
+      value: 2.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1960307262726113094, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
+      propertyPath: animationClips.visualOffset.y
+      value: 0.07
+      objectReference: {fileID: 0}
     - target: {fileID: 4433526915086945435, guid: 6cf09e5c2beee444894144a4edb03104, type: 3}
       propertyPath: m_LocalPosition.x
       value: 20.98
@@ -1870,6 +1894,22 @@ PrefabInstance:
     - target: {fileID: 1066474916347559309, guid: a20939a2a1678b34bb6baab829a33fee, type: 3}
       propertyPath: m_SortingOrder
       value: 21
+      objectReference: {fileID: 0}
+    - target: {fileID: 1727005165776559949, guid: a20939a2a1678b34bb6baab829a33fee, type: 3}
+      propertyPath: animationClips.idle
+      value: 
+      objectReference: {fileID: 7400000, guid: e93ad8ceb0fd67e4fbae0099bff511e4, type: 2}
+    - target: {fileID: 1727005165776559949, guid: a20939a2a1678b34bb6baab829a33fee, type: 3}
+      propertyPath: animationClips.jump
+      value: 
+      objectReference: {fileID: 7400000, guid: e93ad8ceb0fd67e4fbae0099bff511e4, type: 2}
+    - target: {fileID: 1727005165776559949, guid: a20939a2a1678b34bb6baab829a33fee, type: 3}
+      propertyPath: animationClips.move
+      value: 
+      objectReference: {fileID: 7400000, guid: e93ad8ceb0fd67e4fbae0099bff511e4, type: 2}
+    - target: {fileID: 1727005165776559949, guid: a20939a2a1678b34bb6baab829a33fee, type: 3}
+      propertyPath: animationClips.visualOffset.y
+      value: -0.47
       objectReference: {fileID: 0}
     - target: {fileID: 2697560748375006070, guid: a20939a2a1678b34bb6baab829a33fee, type: 3}
       propertyPath: m_Name

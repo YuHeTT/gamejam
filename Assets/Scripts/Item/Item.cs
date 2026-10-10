@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
 
-/// <summary>一套角色动画槽位（静止/移动/跳跃）。由道具提供，运行时自动套用到角色的 Animator 上。</summary>
+/// <summary>一套角色动画槽位（静止/移动/跳跃/冲刺），以及该道具专属的视觉修正。<br/>
+/// 由道具提供，持有该道具时运行时自动套用到角色的 Animator 上。</summary>
 [Serializable]
 public class ItemAnimationSet
 {
@@ -13,6 +14,13 @@ public class ItemAnimationSet
     public AnimationClip jump;
     [Tooltip("冲刺动画（仅「蓦」这类有冲刺能力的道具需要填；留空沿用默认）")]
     public AnimationClip dash;
+
+    [Header("变身后的视觉修正（本道具专属）")]
+    [Tooltip("持有本道具时对角色视觉施加的缩放。道具素材大小不一，逐个道具微调以对齐体型，(1,1) 表示不缩放")]
+    public Vector2 visualScale = new Vector2(2f, 2f);
+    [Tooltip("持有本道具时对角色视觉追加的偏移（本地空间：x 随角色朝向自动镜像，y 上下）。" +
+             "缩放后脚底/头顶没对齐时才需要调，(0,0) 表示不偏移")]
+    public Vector2 visualOffset = Vector2.zero;
 }
 
 /// <summary>世界中的道具：可被拾取的物理物体，同时承载该道具的能力逻辑。<br/>
