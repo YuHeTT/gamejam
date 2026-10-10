@@ -48601,11 +48601,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: canTriggerPedal
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
+      propertyPath: allowAirPlacement
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: canWeighOnBalance
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3662002969677974002, guid: d6e34a9d9cea0444c9b8e9c56995a9bf, type: 3}
       propertyPath: placementOffset.y
@@ -55367,6 +55371,18 @@ PrefabInstance:
     - target: {fileID: 1499725144788696691, guid: 12c3d228f70680c46a13a8df608df591, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3978459794807117074, guid: 12c3d228f70680c46a13a8df608df591, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3978459794807117074, guid: 12c3d228f70680c46a13a8df608df591, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3978459794807117074, guid: 12c3d228f70680c46a13a8df608df591, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6599755133409118838, guid: 12c3d228f70680c46a13a8df608df591, type: 3}
       propertyPath: triggerfloors.Array.size
