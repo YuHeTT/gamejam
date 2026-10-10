@@ -15,6 +15,7 @@ public class PlayerDashState : PlayerState
         rb.gravityScale = 0;
         player.SetVelocity(player.dashSpeed * player.dashDir,0);
         stateTimer = player.dashDuration;  
+        musicmanager.PlayShotSound(musicmanager.ShotIndexDash);
 
         if(!player.IsGroundDetected())      
             player.hasDashedInAir = true;

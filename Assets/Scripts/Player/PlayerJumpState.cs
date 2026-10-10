@@ -12,6 +12,7 @@ public class PlayerJumpState : PlayerState
     {
         base.Enter();
         player.SetVelocity(rb.velocity.x, player.jumpSpeed * player.jumpSpeedMultiplier);
+        musicmanager.PlayShotSound(musicmanager.ShotIndexJump);
     }
 
     public override void Exit()

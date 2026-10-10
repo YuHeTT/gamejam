@@ -77,6 +77,7 @@ public class PlayerTombstoneTeleport : MonoBehaviour
             return;
 
         IsTeleporting = true;
+        musicmanager.PlayRandomDeathSound();
         Vector2 feetTarget = TombstoneService.Instance.GetTeleportFeetPosition();
 
         if (pendingEmergeOnly)

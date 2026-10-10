@@ -13,7 +13,10 @@ public class GraveItem : Item
             return false;
         }
 
-        TombstoneService.Instance.TryPlaceAtPlayerFeet(player);
+        //只有实际放置成功才播放音效；空中放置未开启等失败情况不应误响。
+        if (TombstoneService.Instance.TryPlaceAtPlayerFeet(player))
+            musicmanager.PlayShotSound(musicmanager.ShotIndexPlaceTombstone);
+
         return false;
     }
 }

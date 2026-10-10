@@ -182,6 +182,7 @@ public class PlayerItemController : MonoBehaviour
         Item old = CurrentItem;
         CurrentItem = null;
         old.ExitCarriedState(player, old.GetDropPosition(player.transform.position));
+        musicmanager.PlayShotSound(musicmanager.ShotIndexDrop);
         OnItemChanged?.Invoke(null);
         pickUpCooldownTimer = pickUpCooldown;
     }
@@ -251,6 +252,7 @@ public class PlayerItemController : MonoBehaviour
         pendingItem = target;
         target.BeginPickUpPreview(player);
         CacheVisualBase(target);
+        musicmanager.PlayShotSound(musicmanager.ShotIndexPickUp);
 
         PlayPickUpAnim(restarting);
 

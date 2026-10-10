@@ -11,6 +11,7 @@ public class musicmanager : MonoBehaviour
     public AudioClip[] shotclips;
 
     private AudioClip currentbgmclip;
+    private AudioClip[] deathClips;
 
     // ========================================================================
     //  音量
@@ -84,6 +85,7 @@ public class musicmanager : MonoBehaviour
 
         // 变速音效用的独立音源（用到才创建，可能还不存在）
         if (instance._pitchShot != null) instance._pitchShot.volume = EffectiveShotVolume;
+        if (instance._walkShot != null) instance._walkShot.volume = EffectiveShotVolume;
     }
 
     private static float LoadVolume(ref float cache, string key, float fallback)
@@ -113,6 +115,24 @@ public class musicmanager : MonoBehaviour
     /// <summary>关门（门下降）音效 = shotclips 的 Element 9「门关闭音效」</summary>
     public const int ShotIndexDoorClose = 9;
 
+    /// <summary>拾取道具音效 = shotclips 的 Element 3「拾取音效」</summary>
+    public const int ShotIndexPickUp = 3;
+
+    /// <summary>放下道具音效 = shotclips 的 Element 4「放下音效」</summary>
+    public const int ShotIndexDrop = 4;
+
+    /// <summary>玩家走路音效 = shotclips 的 Element 6「修改后的走路音效」</summary>
+    public const int ShotIndexWalk = 6;
+
+    /// <summary>玩家跳跃音效 = shotclips 的 Element 7「跳跃音效」</summary>
+    public const int ShotIndexJump = 7;
+
+    /// <summary>放置墓碑音效 = shotclips 的 Element 12「放置墓碑」</summary>
+    public const int ShotIndexPlaceTombstone = 12;
+
+    /// <summary>冲刺音效 = shotclips 的 Element 13「冲刺音效 1」</summary>
+    public const int ShotIndexDash = 13;
+
     /// <summary>
     /// 播放音效。<br/>
     /// <paramref name="index"/> = Inspector 里 shotclips 的 Element 序号（从 0 开始）；<br/>
@@ -125,11 +145,95 @@ public class musicmanager : MonoBehaviour
         instance.PlayShotInternal(index, pitch);
     }
 
+    /// <summary>播放墓碑传送用的随机死亡音效。片段放在 Resources/DeathSounds 中。</summary>
+    public static void PlayRandomDeathSound()
+    {
+        if (instance == null || instance.shot == null) return;
+
+        if (instance.deathClips == null)
+            instance.deathClips = Resources.LoadAll<AudioClip>("DeathSounds");
+
+        if (instance.deathClips == null || instance.deathClips.Length == 0)
+        {
+            Debug.LogWarning("[musicmanager] Resources/DeathSounds 中没有找到死亡音效片段");
+            return;
+        }
+
+        AudioClip clip = instance.deathClips[Random.Range(0, instance.deathClips.Length)];
+        if (clip != null)
+            instance.shot.PlayOneShot(clip);
+    }
+
     // 变速音效（开关门就是变速播放的）必须走<b>独立的 AudioSource</b>：
     // AudioSource.pitch 是整个音源共用的，直接在 shot 上改会把拾取 / 跳跃 / 走路等
     // 所有音效一起变速，而且改完立刻还原也来不及 —— 一次性音效播放期间一直在读这个值。
     // 这个音源在第一次用到变速音效时才创建，输出设置跟随 shot，听感保持一致。
     private AudioSource _pitchShot;
+    private AudioSource _walkShot;
+
+    /// <summary>走路音效使用独立音源，停止走路时不会影响其它音效。</summary>
+    private AudioSource WalkShotSource
+    {
+        get
+        {
+            if (_walkShot != null) return _walkShot;
+
+            GameObject go = new GameObject("shot_walk");
+            go.transform.SetParent(transform, false);
+
+            _walkShot = go.AddComponent<AudioSource>();
+            _walkShot.playOnAwake = false;
+            _walkShot.loop = false;
+            _walkShot.volume = EffectiveShotVolume;
+            _walkShot.spatialBlend = 0f;
+
+            if (shot != null)
+            {
+                _walkShot.outputAudioMixerGroup = shot.outputAudioMixerGroup;
+                _walkShot.ignoreListenerPause = shot.ignoreListenerPause;
+                _walkShot.priority = shot.priority;
+            }
+
+            return _walkShot;
+        }
+    }
+
+    /// <summary>播放当前配置的走路音效。</summary>
+    public static void PlayWalkSound()
+    {
+        if (instance == null) return;
+        instance.PlayWalkInternal();
+    }
+
+    /// <summary>停止走路音效，不影响其它音效。</summary>
+    public static void StopWalkSound()
+    {
+        if (instance != null && instance._walkShot != null)
+            instance._walkShot.Stop();
+    }
+
+    private void PlayWalkInternal()
+    {
+        if (shotclips == null || ShotIndexWalk < 0 || ShotIndexWalk >= shotclips.Length)
+        {
+            Debug.LogWarning("Invalid walk Shot index: " + ShotIndexWalk);
+            return;
+        }
+
+        AudioClip clip = shotclips[ShotIndexWalk];
+        if (clip == null)
+        {
+            Debug.LogWarning("Walk shot clip 为空, index: " + ShotIndexWalk);
+            return;
+        }
+
+        AudioSource src = WalkShotSource;
+        //新走路文件可能包含一段连续脚步；播放期间不要每个计时周期重启它。
+        //离开移动状态时由 StopWalkSound() 负责立即停止。
+        if (src.isPlaying)
+            return;
+        src.PlayOneShot(clip);
+    }
 
     private AudioSource PitchShotSource
     {
@@ -180,6 +284,10 @@ public class musicmanager : MonoBehaviour
         {
             Debug.LogError("[musicmanager] bgm AudioSource 未赋值");
         }
+
+        // 音效通过跨场景持久存在的全局音源播放，不应受其固定世界坐标影响音量。
+        if (shot != null)
+            shot.spatialBlend = 0f;
 
         // 玩家可能在上一个界面就调过音量（那时本实例还不存在），这里补上
         ApplyVolumes();
@@ -249,6 +357,8 @@ public class musicmanager : MonoBehaviour
             Debug.LogError("[musicmanager] shot AudioSource 未赋值，无法播放音效");
             return;
         }
+
+        shot.spatialBlend = 0f;
         if (shotclips == null || index < 0 || index >= shotclips.Length)
         {
             Debug.LogWarning("Invalid Shot index: " + index);

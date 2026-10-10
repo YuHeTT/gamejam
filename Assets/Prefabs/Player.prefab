@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 3886318448672416373}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.073, y: -1.272, z: 0}
+  m_LocalPosition: {x: -0.073, y: -1.215, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -241,7 +241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   groundCheck: {fileID: 6561811721845899544}
-  groundCheckDistance: 0.06
+  groundCheckDistance: 0.04
   groundLayerName: Ground
   whatIsGround:
     serializedVersion: 2
@@ -302,7 +302,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.076797545, y: -0.47268093}
+  m_Offset: {x: -0.076797545, y: -0.43410492}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -313,7 +313,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.8169811, y: 1.671356}
+  m_Size: {x: 0.8169811, y: 1.594204}
   m_EdgeRadius: 0
 --- !u!50 &7205943281503693266
 Rigidbody2D:
