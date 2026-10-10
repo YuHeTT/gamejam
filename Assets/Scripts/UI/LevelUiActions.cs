@@ -18,6 +18,9 @@ public static class LevelUiActions
 
     public const string ChooseScene = "UI_choose";
 
+    /// <summary>兜底用的设置场景名（面板模式下不会用到它）</summary>
+    public const string SettingsScene = "UI_settings";
+
     /// <summary>
     /// 兜底路径：进入设置场景（暂停时间 + 记住来源关卡）。<br/>
     /// 只有 <see cref="LevelUI"/> 没配 settingsPanel 时才会走到这里；它会把关卡场景卸载掉，
@@ -80,10 +83,22 @@ public static class LevelUiActions
         LoadChecked(target);
     }
 
-    /// <summary>重新开始：重载"进来的那个关卡"；没有记录时退回选关界面</summary>
+    /// <summary>
+    /// 重新开始：重载当前这一关。<br/><br/>
+    /// 目标场景的取法分两种情况，这样既不会认错、也不会用到过期的记录：<br/>
+    /// - <b>当前场景不是设置界面</b>（面板模式、或直接在关卡里按调试键 3）：
+    ///   当前场景就是关卡本身，直接用它的名字；<br/>
+    /// - <b>当前场景就是设置界面</b>（独立的 UI_settings 场景模式）：
+    ///   真正在跑的场景是设置界面，只能靠打开设置时记下的 <see cref="RememberedLevelScene"/>。
+    /// </summary>
     public static void RestartCurrentLevel()
     {
-        string target = RememberedLevelScene;
+        Scene active = SceneManager.GetActiveScene();
+        bool activeIsLevel = active.IsValid()
+                             && !string.IsNullOrEmpty(active.name)
+                             && active.name != SettingsScene;
+
+        string target = activeIsLevel ? active.name : RememberedLevelScene;
 
         if (string.IsNullOrEmpty(target))
         {
@@ -92,7 +107,8 @@ public static class LevelUiActions
             return;
         }
 
-        Debug.Log("[LevelUI] 重新开始关卡：" + target);
+        Debug.Log("[LevelUI] 重新开始关卡：" + target +
+                  (activeIsLevel ? "（当前场景）" : "（打开设置时记下的来源关卡）"));
         LoadChecked(target);
     }
 

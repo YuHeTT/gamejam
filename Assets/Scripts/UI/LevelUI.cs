@@ -148,11 +148,18 @@ public class LevelUI : MonoBehaviour
         {
             if (GamePause.IsPaused) return;   // 防连点 / 防重复触发
 
+            // 面板模式没有"切场景"这一步，但"来源关卡"这个状态照样要记：
+            // 设置界面里的「重新开始」靠它找关卡，不记的话会提示"没记住来源关卡"并跳到选关界面。
+            string levelScene = gameObject.scene.name;
+            if (!string.IsNullOrEmpty(levelScene))
+                LevelUiActions.RememberedLevelScene = levelScene;
+
             GamePause.Pause(pauseAudioWhilePaused);
             settingsPanel.SetActive(true);
             SetGearInteractable(false);
 
-            Debug.Log("[LevelUI] 打开设置面板：timeScale=0，关卡保留不重载。", this);
+            Debug.Log("[LevelUI] 打开设置面板：timeScale=0，关卡保留不重载。" +
+                      "（来源关卡 " + LevelUiActions.RememberedLevelScene + "）", this);
             return;
         }
 
