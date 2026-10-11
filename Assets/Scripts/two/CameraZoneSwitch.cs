@@ -36,6 +36,11 @@ public class CameraZoneSwitch : MonoBehaviour
     [Header("目标相机（留空 = Camera.main）")]
     public Camera targetCamera;
 
+    [Header("瞬移落点微调")]
+    [Tooltip("瞬移落点在锚点基础上再抬高多少米（正值向上）。抬高一点点让玩家落到地板之上、由重力自然落正，" +
+             "可以避免脚底正好压在接缝/格子上。0 = 完全按锚点高度")]
+    public float landingOffsetY = 0.02f;
+
     private Collider2D _zone;
 
     // 所有启用中的判定区。传送这类"直接把玩家瞬移过去"的操作绕过了触发回调，
@@ -246,19 +251,38 @@ public class CameraZoneSwitch : MonoBehaviour
             targetCamera.transform.position = new Vector3(_camOriginPos.x, _camOriginPos.y, z);
     }
 
-    /// <summary>瞬移玩家到指定锚点，保留原 Z；不触碰 velocity / 朝向 / 状态机</summary>
+    /// <summary>
+    /// 瞬移玩家到指定锚点，保留原 Z。<br/>
+    /// 水平速度、朝向、状态机、动画都不动；唯一被清掉的是<b>向下的竖直速度</b> —— 原因见下方注释。
+    /// </summary>
     private void MovePlayer(Player player, Transform anchor, bool forward)
     {
         Vector3 target;
 
         if (anchor != null)
-            target = new Vector3(anchor.position.x, anchor.position.y, player.transform.position.z);
+            target = new Vector3(anchor.position.x, anchor.position.y + landingOffsetY, player.transform.position.z);
         else if (!forward && _hasPlayerOrigin)
-            target = new Vector3(_playerOriginPos.x, _playerOriginPos.y, player.transform.position.z);
+            target = new Vector3(_playerOriginPos.x, _playerOriginPos.y + landingOffsetY, player.transform.position.z);
         else
             return;
 
-        player.rb.position = target;
+        Rigidbody2D rb = player.rb;
+
+        // 只清"向下"的那一半竖直速度：玩家跳起穿过判定区时，向上的速度必须保留，否则跳跃会被截断。
+        //
+        // 为什么必须清：瞬移本身是"设置位置"，但玩家身上还带着下落速度，下一个物理步会继续把他往下推
+        // （穿透深度 ≈ 竖直速度 × 固定步长，速度 5m/s、步长 0.02s 时就是 10cm）。而求解器恢复穿透很慢
+        // （PositionIterations = 3、BaumgarteScale = 0.2，每步只修回约两成），要好几帧才推得出来。
+        // 在那几帧里，方形碰撞体的下边角会挂在地板/格子接缝的边缘上 —— 表现为"走不过去、要跳一下"。
+        // 清掉向下的速度后，玩家从静止开始自然落正，穿透这个源头就没了。
+        if (rb != null)
+        {
+            Vector2 v = rb.velocity;
+            if (v.y < 0f) rb.velocity = new Vector2(v.x, 0f);
+
+            rb.position = target;
+        }
+
         player.transform.position = target;
         Physics2D.SyncTransforms();
     }
