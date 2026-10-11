@@ -44,8 +44,11 @@ public static class LevelUiSetup
 
         LevelUI levelUi = root.GetComponent<LevelUI>();
         levelUi.settingsScene = "UI_settings";
+        // 齿轮入口：左上角贴边 (24,896)，边长 160 × 2/3 ≈ 106.67
+        // （原来 160 偏大，2026-10 缩到 2/3；改这里就同时改了"重新生成"的结果，
+        //   与 Tools → UI → 齿轮按钮 里那个只改锚点的小工具保持一致）
         levelUi.buttonPosition = new Vector2(24f, 896f);
-        levelUi.buttonSize = new Vector2(160f, 160f);
+        levelUi.buttonSize = new Vector2(160f * 2f / 3f, 160f * 2f / 3f);
         levelUi.buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(GearSpritePath);
 
         if (levelUi.buttonSprite == null)
